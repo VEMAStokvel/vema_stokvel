@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funeral Cover Application Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <!-- Form Header -->
+            <div class="bg-blue-600 text-white px-6 py-4">
+                <h1 class="text-2xl font-bold">Funeral Cover Application Form</h1>
+            </div>
+            
+            <!-- Main Form Content -->
+            <form id="funeralForm" class="p-6">
+                <!-- Main Member Section -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Main Member Details</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="fullName" name="fullName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="idNumber" class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                            <input type="text" id="idNumber" name="idNumber" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address (optional)</label>
+                            <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <input type="text" id="address" name="address" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                            <div class="flex items-center bg-gray-100 px-3 py-2 rounded-md">
+                                <span class="font-medium">R75</span>
+                                <span class="ml-2 text-sm text-gray-600">(Includes Spouse and Kids)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Extended Family Members Section -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Extended Family Members</h2>
+                    <p class="text-sm text-gray-600 mb-4">You may add extended family members for an additional monthly fee:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-blue-50 p-3 rounded-md">
+                            <p class="font-medium text-blue-800">Under 65</p>
+                            <p class="text-lg font-bold">R55/month</p>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-md">
+                            <p class="font-medium text-blue-800">65 and above</p>
+                            <p class="text-lg font-bold">R85/month</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Member 1 -->
+                    <div class="member-section bg-gray-50 p-4 rounded-md mb-4">
+                        <h3 class="font-medium text-gray-700 mb-3">Member 1</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="member1Name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="member1Name" name="member1Name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member1Id" class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                                <input type="text" id="member1Id" name="member1Id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member1Age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                <input type="number" id="member1Age" name="member1Age" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member1Relationship" class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                                <select id="member1Relationship" name="member1Relationship" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="member1Premium" class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                                <select id="member1Premium" name="member1Premium" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="55">R55 (Under 65)</option>
+                                    <option value="85">R85 (65 and above)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Member 2 -->
+                    <div class="member-section bg-gray-50 p-4 rounded-md mb-4">
+                        <h3 class="font-medium text-gray-700 mb-3">Member 2</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="member2Name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="member2Name" name="member2Name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member2Id" class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                                <input type="text" id="member2Id" name="member2Id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member2Age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                <input type="number" id="member2Age" name="member2Age" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member2Relationship" class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                                <select id="member2Relationship" name="member2Relationship" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="member2Premium" class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                                <select id="member2Premium" name="member2Premium" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="55">R55 (Under 65)</option>
+                                    <option value="85">R85 (65 and above)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Member 3 -->
+                    <div class="member-section bg-gray-50 p-4 rounded-md mb-4">
+                        <h3 class="font-medium text-gray-700 mb-3">Member 3</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="member3Name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="member3Name" name="member3Name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member3Id" class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                                <input type="text" id="member3Id" name="member3Id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member3Age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                <input type="number" id="member3Age" name="member3Age" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="member3Relationship" class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                                <select id="member3Relationship" name="member3Relationship" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="member3Premium" class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                                <select id="member3Premium" name="member3Premium" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="55">R55 (Under 65)</option>
+                                    <option value="85">R85 (65 and above)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Declaration Section -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Declaration</h2>
+                    <p class="text-sm text-gray-700 mb-4">
+                        I declare that the information provided is accurate and complete. I understand that incorrect or false information may result in cancellation of my policy or non-payment of claims.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="signature" class="block text-sm font-medium text-gray-700 mb-1">Applicant Signature</label>
+                            <input type="text" id="signature" name="signature" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                            <input type="date" id="date" name="date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex justify-center">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        Submit Application
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('funeralForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate main member fields
+            const mainFields = ['fullName', 'idNumber', 'phoneNumber', 'address', 'signature', 'date'];
+            let isValid = true;
+            
+            mainFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (!element.value.trim()) {
+                    isValid = false;
+                    element.classList.add('border-red-500');
+                } else {
+                    element.classList.remove('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                alert('Please fill in all required main member fields.');
+                return;
+            }
+            
+            // Process form data (in a real app, you would send this to a server)
+            const formData = new FormData(this);
+            const formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+            
+            console.log('Form data:', formObject);
+            
+            // Show success message
+            alert('Application submitted successfully!');
+            this.reset();
+        });
+        
+        // Add dynamic premium selection based on age
+        document.querySelectorAll('[id$="Age"]').forEach(ageInput => {
+            ageInput.addEventListener('change', function() {
+                const memberNum = this.id.replace('member', '').replace('Age', '');
+                const premiumSelect = document.getElementById(`member${memberNum}Premium`);
+                const age = parseInt(this.value);
+                
+                if (!isNaN(age)) {
+                    if (age >= 65) {
+                        premiumSelect.value = '85';
+                    } else {
+                        premiumSelect.value = '55';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

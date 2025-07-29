@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Loan Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../../css/styles.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="../../js/firebase.js" defer></script>
+    <script src="../../js/auth.js" defer></script>
+    <script src="../../js/utils.js" defer></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden bg-blue-800 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <img src="../../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
+        </div>
+        <button id="mobile-menu-button" class="text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="flex h-screen">
+        <div id="sidebar" class="bg-blue-800 text-white w-64 flex-shrink-0 transform -translate-x-full md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 transition duration-200 ease-in-out">
+            <div class="p-4 flex items-center space-x-2">
+                <img src="../../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
+            </div>
+            <nav class="mt-6">
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Main</div>
+                <a href="../index.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Dashboard
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Stokvel</div>
+                <a href="../stokvel.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    My Stokvels
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Financial Services</div>
+                <a href="../store.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    Online Store
+                </a>
+                <a href="../funeral.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Funeral Cover
+                </a>
+                <a href="../loans.html" class="block px-4 py-3 bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Loans
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Account</div>
+                <a href="#" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Profile
+                </a>
+                <a href="#" id="logout-btn" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto md:ml-64">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-semibold text-gray-800">Loan Application</h1>
+                <div class="md:hidden">
+                    <button id="back-button" class="text-blue-600 hover:text-blue-800">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="p-4 md:p-6">
+                <form id="loan-application-form" class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+                    <div class="mb-6 md:mb-8">
+                        <h2 class="text-lg md:text-xl font-semibold mb-2">Loan Application Form</h2>
+                        <p class="text-gray-600 text-sm md:text-base">Please fill in all required fields to apply for a loan.</p>
+                    </div>
+
+                    <!-- Progress Steps - Mobile (simplified) -->
+                    <div class="md:hidden mb-6">
+                        <div class="flex items-center justify-center mb-2">
+                            <div class="text-sm font-medium text-gray-700">
+                                Step <span id="current-step-mobile">1</span> of 4
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="mobile-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 25%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Steps - Desktop -->
+                    <div class="hidden md:block mb-8">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex-1 flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">1</div>
+                                <div class="ml-2 text-sm font-medium text-gray-700">Personal Info</div>
+                            </div>
+                            <div class="flex-1 border-t-2 border-blue-600 mx-2"></div>
+                            <div class="flex-1 flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center">2</div>
+                                <div class="ml-2 text-sm font-medium text-gray-500">Employment</div>
+                            </div>
+                            <div class="flex-1 border-t-2 border-gray-200 mx-2"></div>
+                            <div class="flex-1 flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center">3</div>
+                                <div class="ml-2 text-sm font-medium text-gray-500">Loan Details</div>
+                            </div>
+                            <div class="flex-1 border-t-2 border-gray-200 mx-2"></div>
+                            <div class="flex-1 flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center">4</div>
+                                <div class="ml-2 text-sm font-medium text-gray-500">Documents</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Application Section -->
+                    <div class="space-y-6 md:space-y-8">
+                        <!-- Personal Information Section -->
+                        <div id="personal-info-section">
+                            <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Personal Information</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Full Name*</label>
+                                    <input type="text" id="full-name" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">ID Number*</label>
+                                    <input type="text" id="id-number" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Phone Number*</label>
+                                    <input type="tel" id="phone-number" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Email Address*</label>
+                                    <input type="email" id="email-address" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 text-sm mb-2">Residential Address*</label>
+                                    <textarea id="residential-address" class="w-full p-2 border rounded text-sm md:text-base" rows="2" required></textarea>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex justify-end">
+                                <button type="button" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 next-section" data-next="employment-section">Next: Employment Details</button>
+                            </div>
+                        </div>
+
+                        <!-- Employment Section (initially hidden) -->
+                        <div id="employment-section" class="hidden">
+                            <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Employment Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Employer Name*</label>
+                                    <input type="text" id="employer-name" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Occupation/Job Title*</label>
+                                    <input type="text" id="job-title" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 text-sm mb-2">Work Address*</label>
+                                    <textarea id="work-address" class="w-full p-2 border rounded text-sm md:text-base" rows="2" required></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Work Contact Number*</label>
+                                    <input type="tel" id="work-contact" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Employment Start Date*</label>
+                                    <input type="date" id="employment-date" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Gross Monthly Salary (R)*</label>
+                                    <input type="number" id="gross-salary" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Net Monthly Salary (R)*</label>
+                                    <input type="number" id="net-salary" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex justify-between">
+                                <button type="button" class="px-4 py-2 md:px-6 md:py-2 border rounded text-gray-700 hover:bg-gray-100 prev-section" data-prev="personal-info-section">Back</button>
+                                <button type="button" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 next-section" data-next="loan-details-section">Next: Loan Details</button>
+                            </div>
+                        </div>
+
+                        <!-- Loan Details Section (initially hidden) -->
+                        <div id="loan-details-section" class="hidden">
+                            <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Loan Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Loan Amount Requested*</label>
+                                    <select id="loan-amount" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <option value="">Select amount</option>
+                                        <option value="500">R500</option>
+                                        <option value="1000">R1,000</option>
+                                        <option value="2000">R2,000</option>
+                                        <option value="3000">R3,000</option>
+                                        <option value="other">Other amount</option>
+                                    </select>
+                                    <div id="custom-amount-container" class="mt-2 hidden">
+                                        <label class="block text-gray-700 text-sm mb-2">Custom Amount (R)*</label>
+                                        <input type="number" id="custom-amount" class="w-full p-2 border rounded text-sm md:text-base">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Repayment Term*</label>
+                                    <select id="loan-term" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <option value="">Select term</option>
+                                        <option value="1">1 month</option>
+                                        <option value="2">2 months</option>
+                                        <option value="3">3 months</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 text-sm mb-2">Purpose of Loan*</label>
+                                    <select id="loan-purpose" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <option value="">Select purpose</option>
+                                        <option value="emergency">Emergency</option>
+                                        <option value="education">Education</option>
+                                        <option value="business">Business</option>
+                                        <option value="home">Home Improvement</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4 mt-6">Monthly Expenses</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Other Income Sources (R)</label>
+                                    <input type="number" id="other-income" class="w-full p-2 border rounded text-sm md:text-base" value="0">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Rent/Housing (R)*</label>
+                                    <input type="number" id="rent" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Food & Groceries (R)*</label>
+                                    <input type="number" id="food" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Transport (R)*</label>
+                                    <input type="number" id="transport" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Existing Loan Repayments (R)*</label>
+                                    <input type="number" id="existing-loans" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Other Monthly Expenses (R)*</label>
+                                    <input type="number" id="other-expenses" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                </div>
+                            </div>
+                            <div class="mt-6 flex justify-between">
+                                <button type="button" class="px-4 py-2 md:px-6 md:py-2 border rounded text-gray-700 hover:bg-gray-100 prev-section" data-prev="employment-section">Back</button>
+                                <button type="button" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 next-section" data-next="documents-section">Next: Documents</button>
+                            </div>
+                        </div>
+
+                        <!-- Documents Section (initially hidden) -->
+                        <div id="documents-section" class="hidden">
+                            <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Required Documents</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Copy of ID*</label>
+                                    <input type="file" id="id-copy" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <p class="text-xs text-gray-500 mt-1">Upload a clear copy of your ID document</p>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Latest Payslip*</label>
+                                    <input type="file" id="payslip" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <p class="text-xs text-gray-500 mt-1">Upload your most recent payslip</p>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">3-Month Bank Statement*</label>
+                                    <input type="file" id="bank-statement" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <p class="text-xs text-gray-500 mt-1">Upload your last 3 months bank statements</p>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm mb-2">Employment Confirmation Letter</label>
+                                    <input type="file" id="employment-confirmation" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png">
+                                    <p class="text-xs text-gray-500 mt-1">Optional: Upload employment confirmation letter</p>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Conditions -->
+                            <div class="mt-6 p-4 bg-gray-50 rounded">
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="terms-agreement" class="mt-1 mr-2" required>
+                                    <label for="terms-agreement" class="text-xs md:text-sm text-gray-700">
+                                        I agree to the <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a> and confirm that all information provided is accurate. I understand that false information may result in my application being declined.
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex justify-between">
+                                <button type="button" class="px-4 py-2 md:px-6 md:py-2 border rounded text-gray-700 hover:bg-gray-100 prev-section" data-prev="loan-details-section">Back</button>
+                                <button type="submit" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit Application</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Application Submitted!</h3>
+            <p class="text-gray-600 mb-6">Your loan application has been received and is being processed. You'll receive a confirmation email shortly.</p>
+            <button id="close-success-modal" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full md:w-auto">Back to Loans</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const sidebar = document.getElementById('sidebar');
+            
+            mobileMenuButton.addEventListener('click', function() {
+                sidebar.classList.toggle('translate-x-0');
+                sidebar.classList.toggle('-translate-x-full');
+            });
+
+            // Back button for mobile
+            document.getElementById('back-button').addEventListener('click', function() {
+                window.history.back();
+            });
+
+            // Set user name if available
+            const userName = localStorage.getItem('userName');
+            if (userName) {
+                document.getElementById('user-name').textContent = userName;
+            }
+
+            // Handle custom amount selection
+            document.getElementById('loan-amount').addEventListener('change', function() {
+                const customContainer = document.getElementById('custom-amount-container');
+                if (this.value === 'other') {
+                    customContainer.classList.remove('hidden');
+                    document.getElementById('custom-amount').required = true;
+                } else {
+                    customContainer.classList.add('hidden');
+                    document.getElementById('custom-amount').required = false;
+                }
+            });
+
+            // Section navigation
+            document.querySelectorAll('.next-section').forEach(button => {
+                button.addEventListener('click', function() {
+                    const currentSection = this.closest('div[id$="-section"]');
+                    const nextSectionId = this.getAttribute('data-next');
+                    
+                    // Validate current section before proceeding
+                    if (validateSection(currentSection.id)) {
+                        currentSection.classList.add('hidden');
+                        document.getElementById(nextSectionId).classList.remove('hidden');
+                        updateProgressSteps(nextSectionId);
+                        updateMobileProgress(nextSectionId);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.prev-section').forEach(button => {
+                button.addEventListener('click', function() {
+                    const currentSection = this.closest('div[id$="-section"]');
+                    const prevSectionId = this.getAttribute('data-prev');
+                    
+                    currentSection.classList.add('hidden');
+                    document.getElementById(prevSectionId).classList.remove('hidden');
+                    updateProgressSteps(prevSectionId);
+                    updateMobileProgress(prevSectionId);
+                });
+            });
+
+            function validateSection(sectionId) {
+                const inputs = document.querySelectorAll(`#${sectionId} [required]`);
+                let isValid = true;
+                
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        input.classList.add('border-red-500');
+                        isValid = false;
+                    } else {
+                        input.classList.remove('border-red-500');
+                    }
+                });
+
+                if (!isValid) {
+                    alert('Please fill in all required fields before proceeding.');
+                }
+
+                return isValid;
+            }
+
+            function updateProgressSteps(currentSection) {
+                // Only update desktop progress steps
+                if (window.innerWidth >= 768) {
+                    const steps = document.querySelectorAll('.flex-1.flex.items-center');
+                    const currentStepIndex = Array.from(steps).findIndex(step => 
+                        step.querySelector('div').textContent === currentSection.replace('-section', '')[0]
+                    );
+
+                    steps.forEach((step, index) => {
+                        const numberDiv = step.querySelector('div:first-child');
+                        const textDiv = step.querySelector('div:last-child');
+                        
+                        if (index <= currentStepIndex) {
+                            numberDiv.classList.remove('bg-gray-200', 'text-gray-600');
+                            numberDiv.classList.add('bg-blue-600', 'text-white');
+                            textDiv.classList.remove('text-gray-500');
+                            textDiv.classList.add('text-gray-700');
+                        } else {
+                            numberDiv.classList.add('bg-gray-200', 'text-gray-600');
+                            numberDiv.classList.remove('bg-blue-600', 'text-white');
+                            textDiv.classList.add('text-gray-500');
+                            textDiv.classList.remove('text-gray-700');
+                        }
+                    });
+
+                    // Update connecting lines
+                    const lines = document.querySelectorAll('.flex-1.border-t-2');
+                    lines.forEach((line, index) => {
+                        if (index < currentStepIndex) {
+                            line.classList.remove('border-gray-200');
+                            line.classList.add('border-blue-600');
+                        } else {
+                            line.classList.add('border-gray-200');
+                            line.classList.remove('border-blue-600');
+                        }
+                    });
+                }
+            }
+
+            function updateMobileProgress(currentSection) {
+                if (window.innerWidth < 768) {
+                    const stepMap = {
+                        'personal-info-section': { step: 1, width: '25%' },
+                        'employment-section': { step: 2, width: '50%' },
+                        'loan-details-section': { step: 3, width: '75%' },
+                        'documents-section': { step: 4, width: '100%' }
+                    };
+                    
+                    const currentStep = stepMap[currentSection];
+                    document.getElementById('current-step-mobile').textContent = currentStep.step;
+                    document.getElementById('mobile-progress-bar').style.width = currentStep.width;
+                }
+            }
+
+            // Form submission
+            document.getElementById('loan-application-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!document.getElementById('terms-agreement').checked) {
+                    alert('Please agree to the terms and conditions before submitting.');
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...</span>';
+
+                try {
+                    // Collect all form data
+                    const formData = {
+                        fullName: document.getElementById('full-name').value,
+                        idNumber: document.getElementById('id-number').value,
+                        phoneNumber: document.getElementById('phone-number').value,
+                        email: document.getElementById('email-address').value,
+                        address: document.getElementById('residential-address').value,
+                        employer: document.getElementById('employer-name').value,
+                        jobTitle: document.getElementById('job-title').value,
+                        workAddress: document.getElementById('work-address').value,
+                        workContact: document.getElementById('work-contact').value,
+                        employmentDate: document.getElementById('employment-date').value,
+                        grossSalary: document.getElementById('gross-salary').value,
+                        netSalary: document.getElementById('net-salary').value,
+                        otherIncome: document.getElementById('other-income').value || 0,
+                        rent: document.getElementById('rent').value || 0,
+                        food: document.getElementById('food').value || 0,
+                        transport: document.getElementById('transport').value || 0,
+                        existingLoans: document.getElementById('existing-loans').value || 0,
+                        otherExpenses: document.getElementById('other-expenses').value || 0,
+                        loanAmount: document.getElementById('loan-amount').value === 'other' ? 
+                                    document.getElementById('custom-amount').value : 
+                                    document.getElementById('loan-amount').value,
+                        loanTerm: document.getElementById('loan-term').value,
+                        purpose: document.getElementById('loan-purpose').value,
+                        termsAgreed: document.getElementById('terms-agreement').checked,
+                        status: 'Pending',
+                        applicationDate: new Date().toISOString(),
+                        userId: localStorage.getItem('userId')
+                    };
+
+                    // Upload files to Firebase Storage
+                    const files = {
+                        idCopy: document.getElementById('id-copy').files[0],
+                        payslip: document.getElementById('payslip').files[0],
+                        bankStatement: document.getElementById('bank-statement').files[0],
+                        employmentConfirmation: document.getElementById('employment-confirmation').files[0]
+                    };
+
+                    const storageRef = firebase.storage().ref();
+                    const uploadPromises = [];
+
+                    for (const [fileType, file] of Object.entries(files)) {
+                        if (file) {
+                            const fileRef = storageRef.child(`loan-documents/${Date.now()}-${file.name}`);
+                            uploadPromises.push(
+                                fileRef.put(file).then(snapshot => snapshot.ref.getDownloadURL())
+                                .then(url => {
+                                    formData[fileType] = url;
+                                })
+                            );
+                        }
+                    }
+
+                    // Wait for all uploads to complete
+                    await Promise.all(uploadPromises);
+
+                    // Save to Firestore
+                    const db = firebase.firestore();
+                    await db.collection('loanApplications').add(formData);
+
+                    // Show success modal
+                    document.getElementById('success-modal').classList.remove('hidden');
+                } catch (error) {
+                    console.error('Error submitting application:', error);
+                    alert('There was an error submitting your application. Please try again.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Application';
+                }
+            });
+
+            // Close success modal
+            document.getElementById('close-success-modal').addEventListener('click', function() {
+                document.getElementById('success-modal').classList.add('hidden');
+                window.location.href = 'loans.html';
+            });
+
+            // Initialize mobile progress
+            updateMobileProgress('personal-info-section');
+        });
+    </script>
+</body>
+</html>

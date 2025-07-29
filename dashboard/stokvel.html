@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - My Stokvels</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../../css/styles.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="../../js/firebase.js" defer></script>
+    <script src="../../js/auth.js" defer></script>
+    <script src="../../js/utils.js" defer></script>
+    <script src="../../js/stokvel.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-0 left-0 z-30 w-full bg-blue-800 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <img src="../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
+        </div>
+        <button id="mobile-menu-button" class="text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="flex h-screen">
+        <div id="sidebar" class="bg-blue-800 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition duration-200 ease-in-out z-20">
+            <nav class="mt-6">
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Main</div>
+                <a href="index.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    Dashboard
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Stokvel</div>
+                <a href="stokvel.html" class="block px-4 py-3 bg-blue-700 text-white flex items-center">
+                    <i class="fas fa-hand-holding-usd w-5 h-5 mr-3"></i>
+                    My Stokvels
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Financial Services</div>
+                <a href="store.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <i class="fas fa-store w-5 h-5 mr-3"></i>
+                    Online Store
+                </a>
+                <a href="funeral.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <i class="fas fa-cross w-5 h-5 mr-3"></i>
+                    Funeral Cover
+                </a>
+                <a href="loans.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <i class="fas fa-hand-holding-usd w-5 h-5 mr-3"></i>
+                    Loans
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Account</div>
+                <a href="#" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <i class="fas fa-user w-5 h-5 mr-3"></i>
+                    Profile
+                </a>
+                <a href="#" id="logout-btn" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <i class="fas fa-sign-out-alt w-5 h-5 mr-3"></i>
+                    Logout
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto md:ml-64 mt-16 md:mt-0">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-semibold text-gray-800">My Stokvels</h1>
+            </header>
+
+            <!-- Main Content -->
+            <main class="p-4 md:p-6">
+                <!-- Stokvel Summary -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+                    <div class="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+                        <h3 class="font-semibold text-lg">My Stokvel Accounts</h3>
+                        <button id="join-stokvel-btn" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full sm:w-auto">Join New Stokvel</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stokvel</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Type</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Next Contribution</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="stokvels-body">
+                                <!-- Stokvel data will be loaded here -->
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading your stokvels...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Stokvel Details Section -->
+                <div id="stokvel-details" class="hidden">
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+                        <div class="p-4 border-b flex justify-between items-center">
+                            <h3 class="font-semibold text-lg" id="stokvel-details-title">Stokvel Details</h3>
+                            <button id="back-to-list" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                                <i class="fas fa-arrow-left mr-1"></i> Back
+                            </button>
+                        </div>
+                        <div class="p-4 md:p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                                <!-- Stokvel Info -->
+                                <div class="bg-blue-50 p-4 md:p-6 rounded-lg">
+                                    <h4 class="font-semibold mb-3 md:mb-4 text-blue-800 flex items-center">
+                                        <i class="fas fa-info-circle mr-2"></i> Stokvel Information
+                                    </h4>
+                                    <div class="space-y-2 md:space-y-3">
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Stokvel Name</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-name">January Stokvel</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Type</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-type">Fixed Term</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Portfolio Manager</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-manager">John Doe</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Start Date</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-start">01 Feb 2023</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">End Date</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-end">30 Nov 2023</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contribution Info -->
+                                <div class="bg-green-50 p-4 md:p-6 rounded-lg">
+                                    <h4 class="font-semibold mb-3 md:mb-4 text-green-800 flex items-center">
+                                        <i class="fas fa-money-bill-wave mr-2"></i> Contribution Information
+                                    </h4>
+                                    <div class="space-y-2 md:space-y-3">
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Current Balance</p>
+                                            <p class="text-xl md:text-2xl font-bold" id="detail-balance">R5,000.00</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Monthly Contribution</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-monthly">R500.00</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Next Contribution Date</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-next-date">01 Sep 2023</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Contributions Made</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-count">7/10</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs md:text-sm text-gray-500">Projected Payout</p>
+                                            <p class="font-medium text-sm md:text-base" id="detail-payout">R5,500.00</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Actions -->
+                                <div class="bg-yellow-50 p-4 md:p-6 rounded-lg">
+                                    <h4 class="font-semibold mb-3 md:mb-4 text-yellow-800 flex items-center">
+                                        <i class="fas fa-bolt mr-2"></i> Quick Actions
+                                    </h4>
+                                    <div class="space-y-2 md:space-y-3">
+                                        <button id="make-contribution" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+                                            <i class="fas fa-money-bill-transfer mr-2"></i> Make Contribution
+                                        </button>
+                                        <button id="view-rules" class="w-full bg-white border border-blue-600 text-blue-600 py-2 rounded hover:bg-blue-50 flex items-center justify-center">
+                                            <i class="fas fa-file-contract mr-2"></i> View Rules
+                                        </button>
+                                        <button id="contact-manager" class="w-full bg-white border border-blue-600 text-blue-600 py-2 rounded hover:bg-blue-50 flex items-center justify-center">
+                                            <i class="fas fa-envelope mr-2"></i> Contact Manager
+                                        </button>
+                                        <button id="withdraw-stokvel" class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 hidden flex items-center justify-center">
+                                            <i class="fas fa-sign-out-alt mr-2"></i> Withdraw from Stokvel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contribution History -->
+                            <div>
+                                <h4 class="font-semibold mb-3 md:mb-4 flex items-center">
+                                    <i class="fas fa-history mr-2"></i> Contribution History
+                                </h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Method</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xs:table-cell">Receipt</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200" id="contributions-body">
+                                            <tr>
+                                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading contribution history...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Join Stokvel Modal -->
+    <div id="join-stokvel-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-40 p-4">
+        <div class="bg-white rounded-lg p-4 md:p-6 w-full max-w-md max-h-screen overflow-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg md:text-xl font-semibold">Join a Stokvel</h3>
+                <button id="close-join-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="join-stokvel-form">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Select Stokvel</label>
+                    <select class="w-full p-2 border rounded" id="stokvel-select" required>
+                        <option value="">Select a stokvel</option>
+                        <option value="january">January Stokvel</option>
+                        <option value="grocery">Grocery Stokvel</option>
+                        <option value="planning">Planning Ahead Stokvel</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Monthly Contribution Amount (R)</label>
+                    <input type="number" class="w-full p-2 border rounded" id="monthly-amount" min="100" step="50" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Payment Method</label>
+                    <select class="w-full p-2 border rounded" id="join-payment-method" required>
+                        <option value="paystack">Paystack</option>
+                        <option value="bank-transfer">Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="rounded text-blue-600" required>
+                        <span class="ml-2 text-sm text-gray-700">I agree to the stokvel rules and terms</span>
+                    </label>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                    <button type="button" id="cancel-join" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Join Stokvel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-40 p-4">
+        <div class="bg-white rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-screen overflow-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg md:text-xl font-semibold" id="rules-modal-title">Stokvel Rules</h3>
+                <button id="close-rules-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="prose prose-sm md:prose" id="rules-content">
+                <!-- Rules content will be loaded here -->
+                <p>Loading rules...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            
+            if (!sidebar.contains(event.target) && event.target !== mobileMenuButton && !mobileMenuButton.contains(event.target)) {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth >= 768) {
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    </script>
+
+    <script src="../../js/stokvel-page.js"></script>
+</body>
+</html>

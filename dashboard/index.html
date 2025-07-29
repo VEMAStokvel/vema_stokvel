@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-4 right-4 z-50">
+        <button id="mobile-menu-btn" class="p-2 rounded-md text-blue-800 bg-white shadow-md">
+            <svg id="menu-open-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <svg id="menu-close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <div id="sidebar" class="bg-blue-800 text-white w-64 flex-shrink-0 fixed md:relative transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-40 h-full">
+            <div class="p-4 flex items-center space-x-2 border-b border-blue-700">
+                <img src="../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
+                <!-- <span class="text-lg font-bold">Vema Stokvel</span> -->
+            </div>
+            <nav class="mt-6">
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold tracking-wider">Main</div>
+                <a href="index.html" class="block px-4 py-3 bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-home w-5 text-center"></i>
+                    <span>Dashboard</span>
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold tracking-wider">Stokvel</div>
+                <a href="stokvel.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-users w-5 text-center"></i>
+                    <span>My Stokvels</span>
+                </a>
+        
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold tracking-wider">Services</div>
+                <a href="store.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-store w-5 text-center"></i>
+                    <span>Online Store</span>
+                </a>
+                <a href="funeral.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-ribbon w-5 text-center"></i>
+                    <span>Funeral Cover</span>
+                </a>
+                <a href="loans.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-hand-holding-usd w-5 text-center"></i>
+                    <span>Loans</span>
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold tracking-wider">Account</div>
+                <a href="#" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-user-circle w-5 text-center"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="#" id="logout-btn" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-sign-out-alt w-5 text-center"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto md:ml-4">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-30 md:ml-0">
+                <h1 class="text-2xl font-semibold text-gray-800">Dashboard</h1>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="p-4 md:p-6">
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-xl mb-6 shadow-md">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-2">Welcome back, <span id="welcome-name" class="capitalize">Member</span>!</h2>
+                            <p class="opacity-90">Here's what's happening with your stokvel accounts today.</p>
+                        </div>
+                        <div class="mt-4 md:mt-0 bg-white bg-opacity-20 px-4 py-2 rounded-full">
+                            <p class="text-sm">Member since: <span id="member-since">2023</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Total Savings -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Total Savings</p>
+                                <h3 class="text-2xl font-bold mt-1" id="total-savings">R0.00</h3>
+                                <p class="text-xs text-gray-500 mt-2">Across all stokvels</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-wallet text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Stokvels -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Active Stokvels</p>
+                                <h3 class="text-2xl font-bold mt-1" id="active-stokvels">0</h3>
+                                <p class="text-xs text-gray-500 mt-2">You're participating in</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-users text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stokvel Summary -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="p-4 border-b flex justify-between items-center">
+                        <h3 class="font-semibold text-lg">My Stokvels</h3>
+                        <a href="stokvel.html" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                            View All <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                        </a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="stokvels-table">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stokvel</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Contribution</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="stokvels-body">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                        <div class="animate-pulse flex justify-center">
+                                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Contribution Section -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Make Contribution</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Bank Details -->
+                            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                <h4 class="text-lg font-semibold mb-4 flex items-center">
+                                    <i class="fas fa-university mr-2 text-blue-600"></i> Bank Account Details
+                                </h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Bank Name</label>
+                                        <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
+                                            Vema Stokvel Bank
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Account Number</label>
+                                        <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
+                                            1234 5678 9012 3456
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Branch Code</label>
+                                        <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
+                                            632005
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Reference</label>
+                                        <div class="font-mono text-gray-800 bg-white p-2 rounded border border-gray-300" id="reference-number">
+                                            USER123-STK456
+                                        </div>
+                                    </div>
+                                    <div class="pt-2">
+                                        <p class="text-xs text-gray-500">
+                                            <i class="fas fa-info-circle mr-1"></i> Use this reference when making payment
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Form -->
+                            <div>
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 text-sm font-medium mb-2">Amount (ZAR)</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">R</span>
+                                        <input type="number" 
+                                               class="w-full pl-8 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                               id="contribution-amount" 
+                                               min="100" 
+                                               step="50" 
+                                               placeholder="500.00"
+                                               required>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <button onclick="sendWhatsAppConfirmation()" 
+                                            class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                                        <i class="fab fa-whatsapp text-xl"></i>
+                                        Notify Admin via WhatsApp
+                                    </button>
+                                    
+                                    <button onclick="showManualPaymentInstructions()" 
+                                            class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                        <i class="fas fa-check-circle"></i>
+                                        Confirm Manual Payment
+                                    </button>
+                                    
+                                    <div class="text-center text-sm text-gray-500 mt-2">
+                                        <p>Payments may take 24-48 hours to reflect</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Quick Links -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <h3 class="font-semibold text-lg mb-4 flex items-center">
+                            <i class="fas fa-bolt text-yellow-500 mr-2"></i> Quick Links
+                        </h3>
+                        <div class="space-y-3">
+                            <a href="store.html" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors flex items-center">
+                                <i class="fas fa-store text-blue-600 mr-3 w-5 text-center"></i>
+                                <span>Visit Online Store</span>
+                                <i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+                            </a>
+                            <a href="funeral.html" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors flex items-center">
+                                <i class="fas fa-ribbon text-blue-600 mr-3 w-5 text-center"></i>
+                                <span>Manage Funeral Cover</span>
+                                <i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+                            </a>
+                            <a href="loans.html" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors flex items-center">
+                                <i class="fas fa-hand-holding-usd text-blue-600 mr-3 w-5 text-center"></i>
+                                <span>Apply for a Loan</span>
+                                <i class="fas fa-chevron-right ml-auto text-gray-400"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 md:col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-lg flex items-center">
+                                <i class="fas fa-exchange-alt text-blue-600 mr-2"></i> Recent Transactions
+                            </h3>
+                            <a href="#" class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                View All <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                            </a>
+                        </div>
+                        <div class="space-y-4" id="recent-transactions">
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="animate-pulse w-full">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                    <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="animate-pulse w-full">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                    <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="animate-pulse w-full">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                    <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Payment Confirmation Modal -->
+    <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                    Payment Confirmation
+                </h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <p class="text-gray-600 mb-1">You've confirmed payment of:</p>
+                    <p class="text-2xl font-bold" id="modal-amount">R500.00</p>
+                </div>
+                
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-2">Please note:</p>
+                    <ul class="list-disc list-inside text-sm space-y-1">
+                        <li>Keep your payment receipt for verification</li>
+                        <li>Processing may take 24-48 hours</li>
+                        <li>Contact support if not reflected after 48 hours</li>
+                    </ul>
+                </div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button id="cancel-payment" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirm-payment" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile Menu Toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Generate random reference number
+        function generateReference() {
+            const userId = 'USER123'; // Replace with actual user ID from your system
+            const stokvelId = 'STK456'; // Replace with actual stokvel ID
+            const randomNum = Math.floor(100 + Math.random() * 900);
+            return `${userId}-${stokvelId}-${randomNum}`;
+        }
+
+        // Set reference number on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('reference-number').textContent = generateReference();
+            
+            // Set user name (replace with actual data from your system)
+            document.getElementById('user-name').textContent = 'John Doe';
+            document.getElementById('welcome-name').textContent = 'John';
+            
+            // Set member since (replace with actual data)
+            document.getElementById('member-since').textContent = '2022';
+            
+            // Set sample stokvel data (replace with actual data)
+            setTimeout(() => {
+                document.getElementById('total-savings').textContent = 'R5,250.00';
+                document.getElementById('active-stokvels').textContent = '2';
+                
+                // Populate stokvel table
+                const stokvelsBody = document.getElementById('stokvels-body');
+                stokvelsBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium">Family Savings</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-gray-500">Monthly</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium">R3,500.00</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-gray-500">15 June 2023</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium">Education Fund</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-gray-500">Quarterly</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium">R1,750.00</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-gray-500">30 June 2023</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                        </td>
+                    </tr>
+                `;
+                
+                // Populate recent transactions
+                const transactions = document.getElementById('recent-transactions');
+                transactions.innerHTML = `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <div class="font-medium">Contribution - Family Savings</div>
+                            <div class="text-sm text-gray-500">15 May 2023</div>
+                        </div>
+                        <div class="font-medium text-green-600">+R500.00</div>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <div class="font-medium">Payout - Education Fund</div>
+                            <div class="text-sm text-gray-500">1 May 2023</div>
+                        </div>
+                        <div class="font-medium text-blue-600">-R1,200.00</div>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <div class="font-medium">Contribution - Education Fund</div>
+                            <div class="text-sm text-gray-500">15 April 2023</div>
+                        </div>
+                        <div class="font-medium text-green-600">+R500.00</div>
+                    </div>
+                `;
+            }, 1000);
+        });
+
+        // WhatsApp Notification Function
+        function sendWhatsAppConfirmation() {
+            const amountInput = document.getElementById('contribution-amount');
+            const amount = amountInput.value;
+            
+            if (!amount || amount < 100) {
+                alert('Please enter a valid amount (minimum R100)');
+                amountInput.focus();
+                return;
+            }
+            
+            const reference = document.getElementById('reference-number').textContent;
+            const userName = document.getElementById('user-name').textContent;
+            
+            const message = encodeURIComponent(
+                `*Vema Stokvel Payment Notification*\n\n` +
+                `Member: ${userName}\n` +
+                `Amount: R${amount}\n` +
+                `Reference: ${reference}\n\n` +
+                `I have made the above payment. Please confirm receipt and update my account.`
+            );
+            
+            // Replace with your admin WhatsApp number
+            const adminNumber = '27721234567'; // Example South African number
+            window.open(`https://wa.me/${adminNumber}?text=${message}`, '_blank');
+        }
+
+        // Show Manual Payment Instructions
+        function showManualPaymentInstructions() {
+            const amountInput = document.getElementById('contribution-amount');
+            const amount = amountInput.value;
+            
+            if (!amount || amount < 100) {
+                alert('Please enter a valid amount (minimum R100)');
+                amountInput.focus();
+                return;
+            }
+            
+            // Set amount in modal
+            document.getElementById('modal-amount').textContent = `R${amount}`;
+            
+            // Show modal
+            document.getElementById('payment-modal').classList.remove('hidden');
+            
+            // Close modal handlers
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('payment-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('cancel-payment').addEventListener('click', function() {
+                document.getElementById('payment-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('confirm-payment').addEventListener('click', function() {
+                alert('Thank you! Your payment confirmation has been submitted. We will process it shortly.');
+                document.getElementById('payment-modal').classList.add('hidden');
+            });
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('payment-modal');
+            if (event.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../../css/styles.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="../../js/firebase.js" defer></script>
+    <script src="../../js/auth.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <div class="text-center mb-8">
+            <img src="../assets/logo/Vema Black.png" alt="Vema Logo" class="h-16 mx-auto mb-4">
+            <h1 class="text-2xl font-bold text-blue-800">Welcome Back</h1>
+            <p class="text-gray-600">Sign in to your Vema Stokvel account</p>
+        </div>
+        
+        <form id="login-form">
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
+                <input type="email" id="email" name="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                <input type="password" id="password" name="password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <a href="#" class="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block">Forgot password?</a>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium">Sign In</button>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">Don't have an account? <a href="register.html" class="text-blue-600 hover:text-blue-800 font-medium">Sign up</a></p>
+        </div>
+    </div>
+</body>
+</html>

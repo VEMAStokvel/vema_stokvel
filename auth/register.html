@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../../css/styles.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="../../js/firebase.js" defer></script>
+    <script src="../../js/auth.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <div class="text-center mb-8">
+            <img src="../assets/logo/Vema Black.png" alt="Vema Logo" class="h-16 mx-auto mb-4">
+            <h1 class="text-2xl font-bold text-blue-800">Create Account</h1>
+            <p class="text-gray-600">Join Vema Stokvel today</p>
+        </div>
+        
+        <form id="register-form">
+            <div class="mb-4">
+                <label for="name" class="block text-gray-700 text-sm font-medium mb-2">Full Name</label>
+                <input type="text" id="name" name="name" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
+                <input type="email" id="email" name="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                <input type="password" id="password" name="password" required minlength="6" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <p class="text-xs text-gray-500 mt-2">Minimum 6 characters</p>
+            </div>
+            <div class="mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" required class="rounded text-blue-600">
+                    <span class="ml-2 text-sm text-gray-700">I agree to the <a href="#" class="text-blue-600">Terms of Service</a> and <a href="#" class="text-blue-600">Privacy Policy</a></span>
+                </label>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium">Create Account</button>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">Already have an account? <a href="login.html" class="text-blue-600 hover:text-blue-800 font-medium">Sign in</a></p>
+        </div>
+    </div>
+</body>
+</html>

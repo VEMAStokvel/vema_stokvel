@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Loans</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../../css/styles.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="../../js/firebase.js" defer></script>
+    <script src="../../js/auth.js" defer></script>
+    <script src="../../js/utils.js" defer></script>
+    <script src="../../js/loans.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden bg-blue-800 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <img src="../../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
+        </div>
+        <button id="mobile-menu-button" class="text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="flex h-screen">
+        <div id="sidebar" class="bg-blue-800 text-white w-64 flex-shrink-0 transform -translate-x-full md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 transition duration-200 ease-in-out">
+            <div class="p-4 flex items-center space-x-2">
+                <img src="../../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
+            </div>
+            <nav class="mt-6">
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Main</div>
+                <a href="../index.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Dashboard
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Stokvel</div>
+                <a href="../dashboard/stokvel.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    My Stokvels
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Financial Services</div>
+                <a href="../dashboard/store.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    Online Store
+                </a>
+                <a href="../dashboard/funeral.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Funeral Cover
+                </a>
+                <a href="../dashboard/loans.html" class="block px-4 py-3 bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Loans
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Account</div>
+                <a href="#" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Profile
+                </a>
+                <a href="#" id="logout-btn" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto md:ml-64">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center fixed w-full md:relative z-30 header-with-menu">
+                <h1 class="text-xl md:text-2xl font-semibold text-gray-800 ml-2 md:ml-0">Member Loans</h1>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                    </div>
+                    
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="p-4 md:p-6 mt-16 md:mt-0">
+                <!-- Loan Application Card -->
+                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                        <div class="mb-4 md:mb-0">
+                            <h2 class="text-lg md:text-xl font-semibold mb-2">Apply for a Loan</h2>
+                            <p class="text-gray-600 text-sm md:text-base">Get quick access to funds with our fixed repayment loans.</p>
+                        </div>
+                        <button id="apply-loan-btn" class="bg-blue-600 text-white px-4 py-2 md:px-6 md:py-2 rounded hover:bg-blue-700 w-full md:w-auto">Apply Now</button>
+                    </div>
+                </div>
+
+                <!-- Loan Calculator -->
+                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+                    <h2 class="text-lg md:text-xl font-semibold mb-4">Loan Calculator</h2>
+                    <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm mb-2">Loan Amount</label>
+                                <select id="loan-amount" class="w-full p-2 border rounded text-sm md:text-base">
+                                    <option value="500">R500</option>
+                                    <option value="1000" selected>R1000</option>
+                                    <option value="2000">R2000</option>
+                                    <option value="3000">R3000</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm mb-2">Repayment Term (months)</label>
+                                <select class="w-full p-2 border rounded text-sm md:text-base" id="loan-term">
+                                    <option value="1">1 month</option>
+                                    <option value="2">2 months</option>
+                                    <option value="3" selected>3 months</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm mb-2">Service Fee</label>
+                                <input type="text" class="w-full p-2 border rounded bg-gray-100 text-sm md:text-base" id="service-fee" value="R52.26" readonly>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm mb-2">Initiation Fee</label>
+                                <input type="text" class="w-full p-2 border rounded bg-gray-100 text-sm md:text-base" id="initiation-fee" value="R150.00" readonly>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 p-4 md:p-6 rounded-lg">
+                            <h3 class="font-semibold mb-3 md:mb-4 text-sm md:text-base">Loan Summary</h3>
+                            <div class="space-y-2 md:space-y-3 text-sm md:text-base">
+                                <div class="flex justify-between">
+                                    <span>Capital:</span>
+                                    <span id="loan-summary-amount">R1,000.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Interest:</span>
+                                    <span id="loan-summary-interest">R45.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Service Fee:</span>
+                                    <span id="loan-summary-service-fee">R52.26</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Initiation Fee:</span>
+                                    <span id="loan-summary-initiation-fee">R150.00</span>
+                                </div>
+                                <div class="flex justify-between font-medium">
+                                    <span>Monthly Payment:</span>
+                                    <span id="loan-summary-payment">R415.75</span>
+                                </div>
+                                <div class="flex justify-between font-bold border-t pt-2 mt-2">
+                                    <span>Total Repayment:</span>
+                                    <span id="loan-summary-total">R1,247.26</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Loans -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+                    <div class="p-3 md:p-4 border-b">
+                        <h3 class="font-semibold text-base md:text-lg">My Loans</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan ID</th>
+                                    <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Term</th>
+                                    <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-2 md:px-6 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="loans-body">
+                                <tr>
+                                    <td colspan="6" class="px-4 py-3 md:px-6 md:py-4 text-center text-gray-500 text-sm md:text-base">Loading your loans...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Loan Application Modal -->
+    <div id="loan-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-4 md:p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg md:text-xl font-semibold">Apply for Loan</h3>
+                <button id="close-loan-modal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="loan-form">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Loan Amount</label>
+                    <select class="w-full p-2 border rounded text-sm md:text-base" id="modal-loan-amount" required>
+                        <option value="500">R500</option>
+                        <option value="1000" selected>R1000</option>
+                        <option value="2000">R2000</option>
+                        <option value="3000">R3000</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Repayment Term</label>
+                    <select class="w-full p-2 border rounded text-sm md:text-base" id="modal-loan-term" required>
+                        <option value="1">1 month</option>
+                        <option value="2">2 months</option>
+                        <option value="3" selected>3 months</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm mb-2">Purpose</label>
+                    <select class="w-full p-2 border rounded text-sm md:text-base" id="loan-purpose" required>
+                        <option value="">Select purpose</option>
+                        <option value="emergency">Emergency</option>
+                        <option value="education">Education</option>
+                        <option value="business">Business</option>
+                        <option value="home">Home Improvement</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm mb-2">Monthly Repayment</label>
+                    <p class="bg-gray-100 p-2 rounded text-sm md:text-base" id="modal-loan-repayment">R415.75</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" id="cancel-loan" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300 text-sm md:text-base">Cancel</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm md:text-base">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = document.getElementById('mobile-menu-button');
+            
+            if (!sidebar.contains(event.target) && !menuButton.contains(event.target) && window.innerWidth < 768) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+
+        // Loan calculator with fixed total repayment amounts
+        const loanData = {
+            '500': {
+                capital: 500.00,
+                interest: 22.50,
+                serviceFee: 52.26,
+                initiationFee: 75.00,
+                totalRepayment: 649.76
+            },
+            '1000': {
+                capital: 1000.00,
+                interest: 45.00,
+                serviceFee: 52.26,
+                initiationFee: 150.00,
+                totalRepayment: 1247.26
+            },
+            '2000': {
+                capital: 2000.00,
+                interest: 90.00,
+                serviceFee: 52.26,
+                initiationFee: 300.00,
+                totalRepayment: 2442.26
+            },
+            '3000': {
+                capital: 3000.00,
+                interest: 135.00,
+                serviceFee: 52.26,
+                initiationFee: 450.00,
+                totalRepayment: 3637.26
+            }
+        };
+
+        function updateLoanDetails() {
+            const amount = document.getElementById('loan-amount').value;
+            const term = parseInt(document.getElementById('loan-term').value);
+            const loan = loanData[amount];
+            
+            // Calculate monthly payment (total repayment divided by term)
+            const monthlyPayment = loan.totalRepayment / term;
+            
+            // Update all fields - total repayment stays the same
+            document.getElementById('loan-summary-amount').textContent = 'R' + loan.capital.toFixed(2);
+            document.getElementById('loan-summary-interest').textContent = 'R' + loan.interest.toFixed(2);
+            document.getElementById('loan-summary-service-fee').textContent = 'R' + loan.serviceFee.toFixed(2);
+            document.getElementById('loan-summary-initiation-fee').textContent = 'R' + loan.initiationFee.toFixed(2);
+            document.getElementById('loan-summary-total').textContent = 'R' + loan.totalRepayment.toFixed(2);
+            document.getElementById('loan-summary-payment').textContent = 'R' + monthlyPayment.toFixed(2);
+            
+            // Update service and initiation fee fields
+            document.getElementById('service-fee').value = 'R' + loan.serviceFee.toFixed(2);
+            document.getElementById('initiation-fee').value = 'R' + loan.initiationFee.toFixed(2);
+        }
+
+        function updateModalDetails() {
+            const amount = document.getElementById('modal-loan-amount').value;
+            const term = parseInt(document.getElementById('modal-loan-term').value);
+            const loan = loanData[amount];
+            
+            const monthlyPayment = loan.totalRepayment / term;
+            document.getElementById('modal-loan-repayment').textContent = 'R' + monthlyPayment.toFixed(2);
+        }
+
+        // Initialize and set up event listeners
+        document.getElementById('loan-amount').addEventListener('change', updateLoanDetails);
+        document.getElementById('loan-term').addEventListener('change', updateLoanDetails);
+        
+        // Modal event listeners
+        document.getElementById('modal-loan-amount').addEventListener('change', updateModalDetails);
+        document.getElementById('modal-loan-term').addEventListener('change', updateModalDetails);
+        
+        // Apply loan button
+        document.getElementById('apply-loan-btn').addEventListener('click', function() {
+            document.getElementById('loan-modal').classList.remove('hidden');
+        });
+        
+        // Close modal buttons
+        document.getElementById('close-loan-modal').addEventListener('click', function() {
+            document.getElementById('loan-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-loan').addEventListener('click', function() {
+            document.getElementById('loan-modal').classList.add('hidden');
+        });
+        
+        // Form submission handler
+        document.getElementById('loan-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const loanAmount = document.getElementById('modal-loan-amount').value;
+            const loanTerm = document.getElementById('modal-loan-term').value;
+            const purpose = document.getElementById('loan-purpose').value;
+            const monthlyRepayment = document.getElementById('modal-loan-repayment').textContent.replace('R', '');
+            const totalRepayment = loanData[loanAmount].totalRepayment;
+            
+            // In a real app, you would collect all required fields here
+            // For demo, we'll use some dummy data
+            const formData = {
+                fullName: "John Doe",
+                idNumber: "9001011234088",
+                phoneNumber: "0712345678",
+                email: "john@example.com",
+                address: "123 Main St, Johannesburg",
+                employer: "ABC Company",
+                jobTitle: "Software Developer",
+                workAddress: "456 Business Ave, Sandton",
+                workContact: "0111234567",
+                employmentDate: "2020-01-15",
+                grossSalary: "25000",
+                netSalary: "18500",
+                otherIncome: "0",
+                rent: "5000",
+                food: "3000",
+                transport: "1500",
+                existingLoans: "2000",
+                otherExpenses: "1000",
+                loanAmount: loanAmount,
+                loanTerm: loanTerm,
+                purpose: purpose,
+                monthlyRepayment: monthlyRepayment,
+                totalRepayment: totalRepayment
+            };
+            
+            // Convert to URL parameters
+            const queryParams = new URLSearchParams(formData).toString();
+            
+            // Close modal
+            document.getElementById('loan-modal').classList.add('hidden');
+            
+            // Redirect to loan application page with data
+            window.location.href = 'Loan Widget/loan-application.html?' + queryParams;
+        });
+        
+        // Initial calculation
+        updateLoanDetails();
+    </script>
+</body>
+</html>
