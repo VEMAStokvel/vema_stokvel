@@ -68,7 +68,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 overflow-auto md:ml-4">
+        <div class="flex-1 overflow-auto md:ml-0">
             <!-- Top Bar -->
             <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-30 md:ml-0">
                 <h1 class="text-2xl font-semibold text-gray-800">Dashboard</h1>
@@ -155,14 +155,24 @@
                 <!-- Contribution Section -->
                 <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
                     <div class="p-6">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Make Contribution</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Make Stokvel Contribution</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <!-- Bank Details -->
                             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
                                 <h4 class="text-lg font-semibold mb-4 flex items-center">
-                                    <i class="fas fa-university mr-2 text-blue-600"></i> Bank Account Details
+                                    <i class="fas fa-university mr-2 text-blue-600"></i> Stokvel Bank Account Details
                                 </h4>
                                 <div class="space-y-4">
+                                    <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                                        <p class="text-sm text-blue-800 font-medium">
+                                            <i class="fas fa-info-circle mr-1"></i> Important: By making payment, know that:
+                                        </p>
+                                        <ul class="list-disc list-inside text-xs text-blue-700 mt-1 pl-1">
+                                            <li>You're joining the stokvel</li>
+                                            <li>See the Referece below to correctly join</li>
+                                            <li>Reference must be correctly entered when depositing</li>
+                                        </ul>
+                                    </div>
                                     <div>
                                         <label class="block text-sm text-gray-500 mb-1">Bank Name</label>
                                         <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
@@ -184,12 +194,12 @@
                                     <div>
                                         <label class="block text-sm text-gray-500 mb-1">Reference</label>
                                         <div class="font-mono text-gray-800 bg-white p-2 rounded border border-gray-300" id="reference-number">
-                                            USER123-STK456
+                                            USER123-MONTHLY-STK456
                                         </div>
                                     </div>
                                     <div class="pt-2">
                                         <p class="text-xs text-gray-500">
-                                            <i class="fas fa-info-circle mr-1"></i> Use this reference when making payment
+                                            <i class="fas fa-info-circle mr-1"></i> This reference includes your stokvel type. Use it exactly as shown.
                                         </p>
                                     </div>
                                 </div>
@@ -198,7 +208,7 @@
                             <!-- Payment Form -->
                             <div>
                                 <div class="mb-6">
-                                    <label class="block text-gray-700 text-sm font-medium mb-2">Amount (ZAR)</label>
+                                    <label class="block text-gray-700 text-sm font-medium mb-2">Amount Deposited (ZAR)</label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">R</span>
                                         <input type="number" 
@@ -209,23 +219,27 @@
                                                placeholder="500.00"
                                                required>
                                     </div>
+                                    <p class="text-xs text-gray-500 mt-1">Please enter the exact amount you deposited to Vema Stokvel Bank</p>
                                 </div>
                                 
                                 <div class="space-y-3">
                                     <button onclick="sendWhatsAppConfirmation()" 
                                             class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
                                         <i class="fab fa-whatsapp text-xl"></i>
-                                        Notify Admin via WhatsApp
+                                        Share Proof via WhatsApp
                                     </button>
                                     
-                                    <button onclick="showManualPaymentInstructions()" 
+                                    <button onclick="sendEmailConfirmation()" 
                                             class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                                        <i class="fas fa-check-circle"></i>
-                                        Confirm Manual Payment
+                                        <i class="fas fa-envelope"></i>
+                                        Share Proof via Email
                                     </button>
                                     
-                                    <div class="text-center text-sm text-gray-500 mt-2">
-                                        <p>Payments may take 24-48 hours to reflect</p>
+                                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                                        <p class="text-xs text-yellow-800">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i> 
+                                            After making your deposit, funds will be added to your stokvel account by admin within 24-48 hours after you share your proof of payment via the notification buttons above.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -335,170 +349,374 @@
         </div>
     </div>
 
+    <!-- Deposit Amount Modal -->
+    <div id="deposit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold flex items-center">
+                    <i class="fas fa-money-bill-wave text-blue-500 mr-2"></i>
+                    Enter Deposit Amount
+                </h3>
+                <button id="close-deposit-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-medium mb-2">Amount Deposited (ZAR)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">R</span>
+                        <input type="number" 
+                               class="w-full pl-8 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                               id="deposit-amount-input" 
+                               min="100" 
+                               step="50" 
+                               placeholder="500.00"
+                               required>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Please enter the exact amount you deposited to Vema Stokvel Bank</p>
+                </div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button id="cancel-deposit" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="submit-deposit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Submit Amount
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Mobile Menu Toggle
         document.getElementById('mobile-menu-btn').addEventListener('click', function() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
+            
+            // Toggle menu icons
+            document.getElementById('menu-open-icon').classList.toggle('hidden');
+            document.getElementById('menu-close-icon').classList.toggle('hidden');
         });
-
-        // Generate random reference number
+    
+        // Generate random reference number with stokvel type
         function generateReference() {
-            const userId = 'USER123'; // Replace with actual user ID from your system
-            const stokvelId = 'STK456'; // Replace with actual stokvel ID
+            const userId = 'e.g January Stokvel '; // Replace with actual user ID from your system
+            const stokvelType = ''; // Replace with actual stokvel type from system
+            const stokvelId = ''; // Replace with actual stokvel ID
             const randomNum = Math.floor(100 + Math.random() * 900);
-            return `${userId}-${stokvelId}-${randomNum}`;
+            return ` ${userId}-${stokvelType}-${stokvelId}-${randomNum}`;
         }
-
-        // Set reference number on page load
-        document.addEventListener('DOMContentLoaded', function() {
+    
+        // Format currency with R and commas
+        function formatCurrency(amount) {
+            return 'R' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+    
+        // Format date for display
+        function formatDate(dateString) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-ZA', options);
+        }
+    
+        // Initialize dashboard data
+        function initDashboard() {
+            // Set reference number
             document.getElementById('reference-number').textContent = generateReference();
             
-            // Set user name (replace with actual data from your system)
-            document.getElementById('user-name').textContent = 'John Doe';
-            document.getElementById('welcome-name').textContent = 'John';
+            // Set user data (replace with actual data from your system)
+            const userData = {
+                name: 'John Doe',
+                joinDate: '2022-01-15',
+                totalSavings: 5250.00,
+                activeStokvels: 2,
+                phone: '+27721234567', // User's phone number with country code
+                email: 'user@example.com' // User's email
+            };
             
-            // Set member since (replace with actual data)
-            document.getElementById('member-since').textContent = '2022';
+            document.getElementById('user-name').textContent = userData.name;
+            document.getElementById('welcome-name').textContent = userData.name.split(' ')[0];
+            document.getElementById('member-since').textContent = new Date(userData.joinDate).getFullYear();
+            document.getElementById('total-savings').textContent = formatCurrency(userData.totalSavings);
+            document.getElementById('active-stokvels').textContent = userData.activeStokvels;
             
-            // Set sample stokvel data (replace with actual data)
-            setTimeout(() => {
-                document.getElementById('total-savings').textContent = 'R5,250.00';
-                document.getElementById('active-stokvels').textContent = '2';
+            // Store user data in global variable
+            window.userData = userData;
+            
+            // Load stokvel data
+            loadStokvelData();
+            
+            // Load recent transactions
+            loadRecentTransactions();
+            
+            // Set up deposit amount modal
+            setupDepositModal();
+        }
+    
+        // Load stokvel data
+        function loadStokvelData() {
+            // Replace with actual data from your system
+            const stokvels = [
+                {
+                    name: 'Family Savings',
+                    type: 'Monthly',
+                    balance: 3500.00,
+                    nextContribution: '2023-06-15',
+                    status: 'Active'
+                },
+                {
+                    name: 'Education Fund',
+                    type: 'Quarterly',
+                    balance: 1750.00,
+                    nextContribution: '2023-06-30',
+                    status: 'Active'
+                }
+            ];
+    
+            const stokvelsBody = document.getElementById('stokvels-body');
+            stokvelsBody.innerHTML = stokvels.map(stokvel => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium">${stokvel.name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-gray-500">${stokvel.type}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium">${formatCurrency(stokvel.balance)}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-gray-500">${formatDate(stokvel.nextContribution)}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${stokvel.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${stokvel.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    
+        // Load recent transactions
+        function loadRecentTransactions() {
+            // Replace with actual data from your system
+            const transactions = [
+                {
+                    description: 'Contribution - Family Savings',
+                    date: '2023-05-15',
+                    amount: 500.00,
+                    type: 'credit'
+                },
+                {
+                    description: 'Payout - Education Fund',
+                    date: '2023-05-01',
+                    amount: 1200.00,
+                    type: 'debit'
+                },
+                {
+                    description: 'Contribution - Education Fund',
+                    date: '2023-04-15',
+                    amount: 500.00,
+                    type: 'credit'
+                }
+            ];
+    
+            const transactionsContainer = document.getElementById('recent-transactions');
+            transactionsContainer.innerHTML = transactions.map(transaction => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium">${transaction.description}</div>
+                        <div class="text-sm text-gray-500">${formatDate(transaction.date)}</div>
+                    </div>
+                    <div class="font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-blue-600'}">
+                        ${transaction.type === 'credit' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                    </div>
+                </div>
+            `).join('');
+        }
+    
+        // Validate contribution amount
+        function validateAmount(amount) {
+            if (!amount || isNaN(amount)) {
+                alert('Please enter a valid amount');
+                return false;
+            }
+            
+            if (amount < 100) {
+                alert('Minimum contribution amount is R100');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Set up deposit amount modal
+        function setupDepositModal() {
+            const depositModal = document.getElementById('deposit-modal');
+            const closeDepositModal = () => depositModal.classList.add('hidden');
+            
+            document.getElementById('close-deposit-modal').addEventListener('click', closeDepositModal);
+            document.getElementById('cancel-deposit').addEventListener('click', closeDepositModal);
+            
+            document.getElementById('submit-deposit').addEventListener('click', function() {
+                const amount = document.getElementById('deposit-amount-input').value;
+                if (!validateAmount(amount)) return;
                 
-                // Populate stokvel table
-                const stokvelsBody = document.getElementById('stokvels-body');
-                stokvelsBody.innerHTML = `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium">Family Savings</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-gray-500">Monthly</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium">R3,500.00</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-gray-500">15 June 2023</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium">Education Fund</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-gray-500">Quarterly</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium">R1,750.00</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-gray-500">30 June 2023</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                        </td>
-                    </tr>
-                `;
-                
-                // Populate recent transactions
-                const transactions = document.getElementById('recent-transactions');
-                transactions.innerHTML = `
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <div class="font-medium">Contribution - Family Savings</div>
-                            <div class="text-sm text-gray-500">15 May 2023</div>
-                        </div>
-                        <div class="font-medium text-green-600">+R500.00</div>
-                    </div>
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <div class="font-medium">Payout - Education Fund</div>
-                            <div class="text-sm text-gray-500">1 May 2023</div>
-                        </div>
-                        <div class="font-medium text-blue-600">-R1,200.00</div>
-                    </div>
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <div class="font-medium">Contribution - Education Fund</div>
-                            <div class="text-sm text-gray-500">15 April 2023</div>
-                        </div>
-                        <div class="font-medium text-green-600">+R500.00</div>
-                    </div>
-                `;
-            }, 1000);
-        });
-
-        // WhatsApp Notification Function
+                // Set the amount in the main form
+                document.getElementById('contribution-amount').value = amount;
+                closeDepositModal();
+            });
+            
+            // Show deposit modal when clicking notification buttons
+            document.querySelectorAll('[onclick^="sendWhatsAppConfirmation"], [onclick^="sendEmailConfirmation"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const amount = document.getElementById('contribution-amount').value;
+                    if (!amount || amount < 100) {
+                        e.preventDefault();
+                        depositModal.classList.remove('hidden');
+                    }
+                });
+            });
+        }
+    
+        // WhatsApp Notification Function - Improved
         function sendWhatsAppConfirmation() {
-            const amountInput = document.getElementById('contribution-amount');
-            const amount = amountInput.value;
-            
-            if (!amount || amount < 100) {
-                alert('Please enter a valid amount (minimum R100)');
-                amountInput.focus();
+            const amount = document.getElementById('contribution-amount').value;
+            if (!validateAmount(amount)) {
+                document.getElementById('deposit-modal').classList.remove('hidden');
                 return;
             }
             
             const reference = document.getElementById('reference-number').textContent;
-            const userName = document.getElementById('user-name').textContent;
+            const userName = document.getElementById('welcome-name').textContent;
             
-            const message = encodeURIComponent(
-                `*Vema Stokvel Payment Notification*\n\n` +
-                `Member: ${userName}\n` +
-                `Amount: R${amount}\n` +
-                `Reference: ${reference}\n\n` +
-                `I have made the above payment. Please confirm receipt and update my account.`
-            );
+            // Admin WhatsApp number (replace with actual admin number)
+            const adminNumber = '0872650960'; // Example South African number
             
-            // Replace with your admin WhatsApp number
-            const adminNumber = '27721234567'; // Example South African number
+            // User's phone number (from user data)
+            const userPhone = window.userData?.phone || '';
+            
+            // Create the WhatsApp message with all details
+            const message = `*Vema Stokvel Payment Notification*%0A%0A` +
+                           `👤 Member Name: ${encodeURIComponent(userName)}%0A` +
+                           `💰 Amount Deposited: R${encodeURIComponent(amount)}%0A` +
+                           `🔖 Stokvel Reference: ${encodeURIComponent(reference)}%0A%0A` +
+                           `📄 *Proof of Payment*%0A` +
+                           `I have made a deposit to the stokvel account with the above details. ` +
+                           `Please find attached my proof of payment. Kindly verify and update my stokvel balance.%0A%0A` +
+                           `Thank you!`;
+            
+            // First send to admin
             window.open(`https://wa.me/${adminNumber}?text=${message}`, '_blank');
-        }
-
-        // Show Manual Payment Instructions
-        function showManualPaymentInstructions() {
-            const amountInput = document.getElementById('contribution-amount');
-            const amount = amountInput.value;
             
-            if (!amount || amount < 100) {
-                alert('Please enter a valid amount (minimum R100)');
-                amountInput.focus();
+            // Then send confirmation to user if phone number exists
+            if (userPhone) {
+                const userMessage = `*Vema Stokvel Payment Confirmation*%0A%0A` +
+                                   `Thank you for your payment of R${amount} to Vema Stokvel.%0A` +
+                                   `Your reference number is: ${reference}%0A%0A` +
+                                   `Your payment is being processed and will reflect in your account within 24-48 hours.%0A%0A` +
+                                   `If you have any questions, please contact support.`;
+                
+                // Delay the user message slightly to allow admin window to open first
+                setTimeout(() => {
+                    window.open(`https://wa.me/${userPhone.replace(/^\+/, '')}?text=${userMessage}`, '_blank');
+                }, 500);
+            }
+            
+            // Show confirmation
+            showPaymentConfirmation(amount);
+        }
+    
+        // Email Notification Function - Improved
+        function sendEmailConfirmation() {
+            const amount = document.getElementById('contribution-amount').value;
+            if (!validateAmount(amount)) {
+                document.getElementById('deposit-modal').classList.remove('hidden');
                 return;
             }
             
+            const reference = document.getElementById('reference-number').textContent;
+            const userName = document.getElementById('welcome-name').textContent;
+            const userEmail = window.userData?.email || '';
+            
+            // Admin email (replace with actual admin email)
+            const adminEmail = 'inquiries@vema24.co.za';
+            
+            const subject = `Stokvel Payment Notification - ${encodeURIComponent(userName)}`;
+            const body = `Dear Vema Stokvel Admin,%0A%0A` +
+                         `I have made a deposit to the stokvel account with the following details:%0A%0A` +
+                         `Member Name: ${encodeURIComponent(userName)}%0A` +
+                         `Amount Deposited: R${encodeURIComponent(amount)}%0A` +
+                         `Stokvel Reference: ${encodeURIComponent(reference)}%0A%0A` +
+                         `I have attached my proof of payment to this email. Please verify and update my stokvel balance accordingly.%0A%0A` +
+                         `Thank you for your prompt attention to this matter.%0A%0A` +
+                         `Best regards,%0A` +
+                         `${encodeURIComponent(userName)}`;
+            
+            // Send email to admin
+            window.open(`mailto:${adminEmail}?subject=${subject}&body=${body}`);
+            
+            // Send confirmation to user if email exists
+            if (userEmail) {
+                const userSubject = `Vema Stokvel Payment Confirmation - R${amount}`;
+                const userBody = `Dear ${encodeURIComponent(userName)},%0A%0A` +
+                                `Thank you for your payment of R${amount} to Vema Stokvel.%0A%0A` +
+                                `Payment Details:%0A` +
+                                `- Amount: R${amount}%0A` +
+                                `- Date: ${new Date().toLocaleDateString('en-ZA')}%0A%0A` +
+                                `Your payment is being processed and will reflect in your account within 24-48 hours.%0A%0A` +
+                                `If you have any questions, please contact our support team.%0A%0A` +
+                                `Best regards,%0A` +
+                                `The Vema Stokvel Team`;
+                
+                // Delay the user email slightly to allow admin email to open first
+                setTimeout(() => {
+                    window.open(`mailto:${userEmail}?subject=${userSubject}&body=${userBody}`);
+                }, 500);
+            }
+            
+            // Show confirmation
+            showPaymentConfirmation(amount);
+        }
+        
+        // Show payment confirmation
+        function showPaymentConfirmation(amount) {
             // Set amount in modal
             document.getElementById('modal-amount').textContent = `R${amount}`;
             
             // Show modal
-            document.getElementById('payment-modal').classList.remove('hidden');
+            const modal = document.getElementById('payment-modal');
+            modal.classList.remove('hidden');
             
             // Close modal handlers
-            document.getElementById('close-modal').addEventListener('click', function() {
-                document.getElementById('payment-modal').classList.add('hidden');
-            });
+            const closeModal = () => modal.classList.add('hidden');
             
-            document.getElementById('cancel-payment').addEventListener('click', function() {
-                document.getElementById('payment-modal').classList.add('hidden');
-            });
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('cancel-payment').addEventListener('click', closeModal);
             
             document.getElementById('confirm-payment').addEventListener('click', function() {
                 alert('Thank you! Your payment confirmation has been submitted. We will process it shortly.');
-                document.getElementById('payment-modal').classList.add('hidden');
+                closeModal();
             });
         }
-
+    
         // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
+        document.addEventListener('click', function(event) {
             const modal = document.getElementById('payment-modal');
             if (event.target === modal) {
                 modal.classList.add('hidden');
             }
+            
+            const depositModal = document.getElementById('deposit-modal');
+            if (event.target === depositModal) {
+                depositModal.classList.add('hidden');
+            }
         });
+    
+        // Initialize the dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
 </html>
