@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vema Stokvel - Register</title>
+    <title>Vema24 - Register</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="../../css/styles.css" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="../../js/firebase.js" defer></script>
-    <script src="../../js/auth.js" defer></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <div class="text-center mb-8">
             <img src="../assets/logo/Vema Black.png" alt="Vema Logo" class="h-16 mx-auto mb-4">
-            <h1 class="text-2xl font-bold text-blue-800">Create Account</h1>
-            <p class="text-gray-600">Join Vema Stokvel today</p>
+            <h1 class="text-2xl font-bold text-blue-800">Create an Account</h1>
+            <p class="text-gray-600">Join Vema24 today</p>
         </div>
+        
+        <!-- Error message container -->
+        <div id="error-message" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+        <!-- Success message container -->
+        <div id="success-message" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
         
         <form id="register-form">
             <div class="mb-4">
@@ -28,23 +32,135 @@
                 <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
                 <input type="email" id="email" name="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
-            <div class="mb-6">
+            <div class="mb-4">
                 <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
-                <input type="password" id="password" name="password" required minlength="6" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <p class="text-xs text-gray-500 mt-2">Minimum 6 characters</p>
+                <input type="password" id="password" name="password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
             </div>
             <div class="mb-6">
-                <label class="flex items-center">
-                    <input type="checkbox" required class="rounded text-blue-600">
-                    <span class="ml-2 text-sm text-gray-700">I agree to the <a href="#" class="text-blue-600">Terms of Service</a> and <a href="#" class="text-blue-600">Privacy Policy</a></span>
-                </label>
+                <label for="confirm-password" class="block text-gray-700 text-sm font-medium mb-2">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium">Create Account</button>
+            <button type="submit" id="register-button" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium flex justify-center items-center">
+                <span id="button-text">Create Account</span>
+                <span id="button-spinner" class="hidden ml-2">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
         </form>
         
         <div class="mt-6 text-center">
             <p class="text-gray-600">Already have an account? <a href="login.html" class="text-blue-600 hover:text-blue-800 font-medium">Sign in</a></p>
         </div>
     </div>
+
+    <script>
+        // Firebase configuration (same as login page)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+          };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Register form submission
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            
+            // Clear previous messages
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match.';
+                errorMessage.classList.remove('hidden');
+                errorMessage.classList.add('bg-red-100', 'text-red-700');
+                return;
+            }
+            
+            // Validate password length
+            if (password.length < 6) {
+                errorMessage.textContent = 'Password must be at least 6 characters.';
+                errorMessage.classList.remove('hidden');
+                errorMessage.classList.add('bg-red-100', 'text-red-700');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('button-text').classList.add('hidden');
+            document.getElementById('button-spinner').classList.remove('hidden');
+            document.getElementById('register-button').disabled = true;
+            
+            // Create user with email and password
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // User created successfully
+                    const user = userCredential.user;
+                    
+                    // Update user profile with name
+                    return user.updateProfile({
+                        displayName: name
+                    });
+                })
+                .then(() => {
+                    // Show success message
+                    successMessage.textContent = 'Account created successfully! Redirecting...';
+                    successMessage.classList.remove('hidden');
+                    successMessage.classList.add('bg-green-100', 'text-green-700');
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = '../dashboard/index.html';
+                    }, 2000);
+                })
+                .catch((error) => {
+                    // Handle errors
+                    let errorText;
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            errorText = 'This email is already registered.';
+                            break;
+                        case 'auth/invalid-email':
+                            errorText = 'Invalid email address.';
+                            break;
+                        case 'auth/operation-not-allowed':
+                            errorText = 'Account creation is currently disabled.';
+                            break;
+                        case 'auth/weak-password':
+                            errorText = 'Password is too weak.';
+                            break;
+                        default:
+                            errorText = 'Registration failed. Please try again.';
+                    }
+                    
+                    errorMessage.textContent = errorText;
+                    errorMessage.classList.remove('hidden');
+                    errorMessage.classList.add('bg-red-100', 'text-red-700');
+                    
+                    // Reset button state
+                    document.getElementById('button-text').classList.remove('hidden');
+                    document.getElementById('button-spinner').classList.add('hidden');
+                    document.getElementById('register-button').disabled = false;
+                });
+        });
+    </script>
 </body>
 </html>

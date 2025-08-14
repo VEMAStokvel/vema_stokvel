@@ -1,20 +1,32 @@
-// Firebase configuration
+// firebase.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+  authDomain: "vema-7606a.firebaseapp.com",
+  projectId: "vema-7606a",
+  storageBucket: "vema-7606a.appspot.com",
+  messagingSenderId: "127492940070",
+  appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7"
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-// Initialize Paystack
-const paystackPublicKey = "YOUR_PAYSTACK_PUBLIC_KEY";
-
-// Export the initialized services
-export { db, auth, paystackPublicKey };
+// Export auth functions
+export { 
+  auth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  updateProfile
+};

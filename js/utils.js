@@ -1,10 +1,10 @@
-// Utility functions
-export function formatDate(dateString) {
+// utils.js - non-module version
+function formatDate(dateString) {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-ZA', options);
 }
 
-export function showToast(message, type = 'success') {
+function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg text-white ${
         type === 'success' ? 'bg-green-500' : 
@@ -19,20 +19,29 @@ export function showToast(message, type = 'success') {
     }, 3000);
 }
 
-export function validateEmail(email) {
+function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
 }
 
-export function validatePhone(phone) {
+function validatePhone(phone) {
     const re = /^[0-9]{10,15}$/;
     return re.test(phone);
 }
 
-export function formatCurrency(amount) {
+function formatCurrency(amount) {
     return new Intl.NumberFormat('en-ZA', {
         style: 'currency',
         currency: 'ZAR',
         minimumFractionDigits: 2
     }).format(amount);
 }
+
+// Make functions available globally
+window.utils = {
+    formatDate,
+    showToast,
+    validateEmail,
+    validatePhone,
+    formatCurrency
+};
