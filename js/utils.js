@@ -1,47 +1,132 @@
-// utils.js - non-module version
-function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-ZA', options);
+import { auth } from './firebase.js';
+
+// Auth state management
+export function handleAuthState(user) {
+    try {
+        const elements = {
+            mobile: {
+                login: 'mobile-login',
+                register: 'mobile-register',
+                dashboard: 'mobile-dashboard'
+            },
+            desktop: {
+                login: 'desktop-login',
+                register: 'desktop-register',
+                dashboard: 'desktop-dashboard'
+            },
+            hero: {
+                cta: 'hero-cta',
+                dashboard: 'hero-dashboard'
+            }
+        };
+
+        // Helper function to update elements
+        const updateElements = (type, isAuthenticated) => {
+            const { login, register, dashboard } = elements[type];
+            
+            const loginEl = document.getElementById(login);
+            const registerEl = document.getElementById(register);
+            const dashboardEl = document.getElementById(dashboard);
+            
+            if (loginEl) loginEl.classList.toggle('hidden', isAuthenticated);
+            if (registerEl) registerEl.classList.toggle('hidden', isAuthenticated);
+            if (dashboardEl) dashboardEl.classList.toggle('hidden', !isAuthenticated);
+        };
+
+        if (user) {
+            // User is authenticated
+            updateElements('mobile', true);
+            updateElements('desktop', true);
+            
+            const heroCta = document.getElementById('hero-cta');
+            const heroDashboard = document.getElementById('hero-dashboard');
+            if (heroCta) heroCta.classList.add('hidden');
+            if (heroDashboard) heroDashboard.classList.remove('hidden');
+        } else {
+            // User is not authenticated
+            updateElements('mobile', false);
+            updateElements('desktop', false);
+            
+            const heroCta = document.getElementById('hero-cta');
+            const heroDashboard = document.getElementById('hero-dashboard');
+            if (heroCta) heroCta.classList.remove('hidden');
+            if (heroDashboard) heroDashboard.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error in handleAuthState:', error);
+    }
 }
 
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded shadow-lg text-white ${
-        type === 'success' ? 'bg-green-500' : 
-        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-    }`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+// Loading states
+export function setLoadingState(isLoading) {
+    try {
+        document.body.classList.toggle('app-loading', isLoading);
+        
+        const overlay = document.getElementById('loading-overlay');
+        const mainContent = document.getElementById('main-content');
+        
+        if (!isLoading && overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
+        
+        if (mainContent) {
+            mainContent.style.opacity = isLoading ? '0' : '1';
+        }
+    } catch (error) {
+        console.error('Error in setLoadingState:', error);
+    }
+}
+
+// Initialize Firebase auth
+export async function initializeFirebaseAuth() {
+    try {
+        setLoadingState(true);
+        
+        // Check auth state with timeout
+        return new Promise((resolve) => {
+            const authTimeout = setTimeout(() => {
+                console.warn('Auth check timed out');
+                handleAuthComplete(null);
+                resolve();
+            }, 5000);
+
+            const unsubscribe = auth.onAuthStateChanged(
+                (user) => {
+                    clearTimeout(authTimeout);
+                    handleAuthComplete(user);
+                    resolve();
+                    unsubscribe();
+                },
+                (error) => {
+                    clearTimeout(authTimeout);
+                    console.error("Auth error:", error);
+                    handleAuthComplete(null);
+                    resolve();
+                }
+            );
+        });
+    } catch (error) {
+        console.error("Firebase init error:", error);
+        handleAuthComplete(null);
+        return Promise.resolve();
+    }
+}
+
+function handleAuthComplete(user) {
+    handleAuthState(user);
+    setLoadingState(false);
     
+    // Smooth transition for loading overlay
     setTimeout(() => {
-        toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
+    }, 500);
 }
-
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-function validatePhone(phone) {
-    const re = /^[0-9]{10,15}$/;
-    return re.test(phone);
-}
-
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-ZA', {
-        style: 'currency',
-        currency: 'ZAR',
-        minimumFractionDigits: 2
-    }).format(amount);
-}
-
-// Make functions available globally
-window.utils = {
-    formatDate,
-    showToast,
-    validateEmail,
-    validatePhone,
-    formatCurrency
-};

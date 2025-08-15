@@ -11,39 +11,50 @@
     <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <div class="text-center mb-8">
-            <img src="../assets/logo/Vema Black.png" alt="Vema Logo" class="h-16 mx-auto mb-4">
-            <h1 class="text-2xl font-bold text-blue-800">Welcome Back</h1>
-            <p class="text-gray-600">Sign in to your Vema24 account</p>
+    <!-- Loading screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-gray-700">Checking authentication...</p>
         </div>
-        
-        <!-- Error message container -->
-        <div id="error-message" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
-        
-        <form id="login-form">
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
-                <input type="email" id="email" name="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+    </div>
+
+    <!-- Main content (hidden by default) -->
+    <div id="main-content" class="hidden">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+            <div class="text-center mb-8">
+                <img src="../assets/logo/Vema Black.png" alt="Vema Logo" class="h-16 mx-auto mb-4">
+                <h1 class="text-2xl font-bold text-blue-800">Welcome Back</h1>
+                <p class="text-gray-600">Sign in to your Vema24 account</p>
             </div>
-            <div class="mb-6">
-                <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
-                <input type="password" id="password" name="password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <a href="forgot-password.html" class="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block">Forgot password?</a>
+            
+            <!-- Error message container -->
+            <div id="error-message" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+            
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
+                    <input type="email" id="email" name="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                    <input type="password" id="password" name="password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <a href="forgot-password.html" class="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block">Forgot password?</a>
+                </div>
+                <button type="submit" id="login-button" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium flex justify-center items-center">
+                    <span id="button-text">Sign In</span>
+                    <span id="button-spinner" class="hidden ml-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">Don't have an account? <a href="register.html" class="text-blue-600 hover:text-blue-800 font-medium">Sign up</a></p>
             </div>
-            <button type="submit" id="login-button" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium flex justify-center items-center">
-                <span id="button-text">Sign In</span>
-                <span id="button-spinner" class="hidden ml-2">
-                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </span>
-            </button>
-        </form>
-        
-        <div class="mt-6 text-center">
-            <p class="text-gray-600">Don't have an account? <a href="register.html" class="text-blue-600 hover:text-blue-800 font-medium">Sign up</a></p>
         </div>
     </div>
 
@@ -57,11 +68,23 @@
             messagingSenderId: "127492940070",
             appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
             measurementId: "G-2E6VC65Q3K"
-          };
+        };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+
+        // Check auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in, redirect to dashboard
+                window.location.href = '../dashboard/index.html';
+            } else {
+                // User is not signed in, show the form
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+            }
+        });
 
         // Login form submission
         document.getElementById('login-form').addEventListener('submit', (e) => {

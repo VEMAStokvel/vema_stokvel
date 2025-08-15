@@ -9,56 +9,185 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-storage-compat.js"></script>
+    
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <div class="text-center mb-8">
-            <img src="../assets/logo/Vema Black.png" alt="Vema Logo" class="h-16 mx-auto mb-4">
-            <h1 class="text-2xl font-bold text-blue-800">Create an Account</h1>
-            <p class="text-gray-600">Join Vema24 today</p>
+    <!-- Loading screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-gray-700">Checking authentication...</p>
         </div>
-        
-        <!-- Error message container -->
-        <div id="error-message" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
-        <!-- Success message container -->
-        <div id="success-message" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
-        
-        <form id="register-form">
-            <div class="mb-4">
-                <label for="name" class="block text-gray-700 text-sm font-medium mb-2">Full Name</label>
-                <input type="text" id="name" name="name" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+    </div>
+
+    <!-- Main content (hidden by default) -->
+    <div id="main-content" class="hidden w-full max-w-md">
+        <div class="bg-white p-8 rounded-lg shadow-md">
+            <div class="text-center mb-6">
+                <img src="../assets/logo/Vema Black.png" alt="Vema Logo" class="h-16 mx-auto mb-4">
+                <h1 class="text-2xl font-bold text-blue-800">Create an Account</h1>
+                <p class="text-gray-600">Join Vema24 in a few simple steps</p>
             </div>
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
-                <input type="email" id="email" name="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            
+            <!-- Progress steps -->
+            <div class="mb-8">
+                <div class="flex justify-between relative">
+                    <div class="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0"></div>
+                    <div id="progress-bar" class="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 z-10 transition-all duration-300" style="width: 25%"></div>
+                    
+                    <div class="flex flex-col items-center z-20">
+                        <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium">1</div>
+                        <span class="text-xs mt-1 text-blue-600 font-medium">Account</span>
+                    </div>
+                    <div class="flex flex-col items-center z-20">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-medium">2</div>
+                        <span class="text-xs mt-1 text-gray-500">Profile</span>
+                    </div>
+                    <div class="flex flex-col items-center z-20">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-medium">3</div>
+                        <span class="text-xs mt-1 text-gray-500">Address</span>
+                    </div>
+                    <div class="flex flex-col items-center z-20">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-medium">4</div>
+                        <span class="text-xs mt-1 text-gray-500">Complete</span>
+                    </div>
+                </div>
             </div>
-            <div class="mb-4">
-                <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
-                <input type="password" id="password" name="password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+            
+            <!-- Error message container -->
+            <div id="error-message" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm"></div>
+            <!-- Success message container -->
+            <div id="success-message" class="hidden mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm"></div>
+            
+            <!-- Step 1: Account Information -->
+            <form id="step1-form" class="step-form active">
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 text-sm font-medium mb-2">Email Address*</label>
+                    <input type="email" id="email" name="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-gray-700 text-sm font-medium mb-2">Password*</label>
+                    <input type="password" id="password" name="password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                </div>
+                <div class="mb-6">
+                    <label for="confirm-password" class="block text-gray-700 text-sm font-medium mb-2">Confirm Password*</label>
+                    <input type="password" id="confirm-password" name="confirm-password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="nextStep(2)" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">
+                        Next
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Step 2: Profile Information -->
+            <form id="step2-form" class="step-form hidden">
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 text-sm font-medium mb-2">Full Name*</label>
+                    <input type="text" id="name" name="name" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="phone" class="block text-gray-700 text-sm font-medium mb-2">Phone Number*</label>
+                    <input type="tel" id="phone" name="phone" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="profileImage" class="block text-gray-700 text-sm font-medium mb-2">Profile Image (optional)</label>
+                    <input type="file" id="profileImage" name="profileImage" accept="image/*" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" onclick="prevStep(1)" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium">
+                        Back
+                    </button>
+                    <button type="button" onclick="nextStep(3)" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">
+                        Next
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Step 3: Address Information -->
+            <form id="step3-form" class="step-form hidden">
+                <div class="mb-4">
+                    <label for="street" class="block text-gray-700 text-sm font-medium mb-2">Street Address</label>
+                    <input type="text" id="street" name="street" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="city" class="block text-gray-700 text-sm font-medium mb-2">City</label>
+                    <input type="text" id="city" name="city" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="postalCode" class="block text-gray-700 text-sm font-medium mb-2">Postal Code</label>
+                    <input type="text" id="postalCode" name="postalCode" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="country" class="block text-gray-700 text-sm font-medium mb-2">Country</label>
+                    <input type="text" id="country" name="country" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" onclick="prevStep(2)" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium">
+                        Back
+                    </button>
+                    <button type="button" onclick="nextStep(4)" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">
+                        Continue
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Step 4: Review and Complete -->
+            <div id="step4-form" class="step-form hidden">
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Review your information</h3>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h4 class="font-medium text-gray-700 mb-2">Account Information</h4>
+                        <p id="review-email" class="text-gray-600"></p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <h4 class="font-medium text-gray-700 mb-2">Profile Information</h4>
+                        <p id="review-name" class="text-gray-600"></p>
+                        <p id="review-phone" class="text-gray-600"></p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-700 mb-2">Address Information</h4>
+                        <p id="review-address" class="text-gray-600"></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">
+                        I agree to the <a href="#" class="text-blue-600 hover:text-blue-800">Terms of Service</a> and <a href="#" class="text-blue-600 hover:text-blue-800">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <div class="flex justify-between">
+                    <button type="button" onclick="prevStep(3)" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium">
+                        Back
+                    </button>
+                    <button type="button" id="complete-registration" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium flex items-center">
+                        <span id="complete-text">Complete Registration</span>
+                        <span id="complete-spinner" class="hidden ml-2">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
             </div>
-            <div class="mb-6">
-                <label for="confirm-password" class="block text-gray-700 text-sm font-medium mb-2">Confirm Password</label>
-                <input type="password" id="confirm-password" name="confirm-password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">Already have an account? <a href="login.html" class="text-blue-600 hover:text-blue-800 font-medium">Sign in</a></p>
             </div>
-            <button type="submit" id="register-button" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium flex justify-center items-center">
-                <span id="button-text">Create Account</span>
-                <span id="button-spinner" class="hidden ml-2">
-                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </span>
-            </button>
-        </form>
-        
-        <div class="mt-6 text-center">
-            <p class="text-gray-600">Already have an account? <a href="login.html" class="text-blue-600 hover:text-blue-800 font-medium">Sign in</a></p>
         </div>
     </div>
 
     <script>
-        // Firebase configuration (same as login page)
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
             authDomain: "vema-7606a.firebaseapp.com",
@@ -67,100 +196,358 @@
             messagingSenderId: "127492940070",
             appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
             measurementId: "G-2E6VC65Q3K"
-          };
+        };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        // Register form submission
-        document.getElementById('register-form').addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Check auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in, redirect to dashboard
+                window.location.href = '../dashboard/index.html';
+            } else {
+                // User is not signed in, show the form
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+            }
+        });
+
+        // Form data object to collect all registration data
+        const formData = {
+            email: '',
+            password: '',
+            name: '',
+            phone: '',
+            profileImageUrl: '', // Will store URL after upload
+            address: {
+                street: '',
+                city: '',
+                postalCode: '',
+                country: ''
+            },
+            joinDate: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Step navigation functions
+        function nextStep(next) {
+            // Validate current step before proceeding
+            if (next === 2 && !validateStep1()) return;
+            if (next === 3 && !validateStep2()) return;
+            if (next === 4 && !validateStep3()) return;
             
-            const name = document.getElementById('name').value;
+            // Update progress bar
+            const progressPercentage = ((next - 1) / 3) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            
+            // Update step indicators
+            updateStepIndicators(next);
+            
+            // Hide all steps
+            document.querySelectorAll('.step-form').forEach(form => {
+                form.classList.add('hidden');
+                form.classList.remove('active');
+            });
+            
+            // Show current step
+            const currentStep = document.getElementById(`step${next}-form`);
+            currentStep.classList.remove('hidden');
+            currentStep.classList.add('active');
+            
+            // If moving to review step, populate review information
+            if (next === 4) {
+                populateReviewStep();
+            }
+        }
+
+        function prevStep(prev) {
+            // Update progress bar
+            const progressPercentage = ((prev - 1) / 3) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            
+            // Update step indicators
+            updateStepIndicators(prev);
+            
+            // Hide all steps
+            document.querySelectorAll('.step-form').forEach(form => {
+                form.classList.add('hidden');
+                form.classList.remove('active');
+            });
+            
+            // Show previous step
+            document.getElementById(`step${prev}-form`).classList.remove('hidden');
+            document.getElementById(`step${prev}-form`).classList.add('active');
+        }
+
+        function updateStepIndicators(currentStep) {
+            const steps = document.querySelectorAll('.flex.flex-col.items-center.z-20');
+            steps.forEach((step, index) => {
+                const number = step.querySelector('div');
+                const label = step.querySelector('span');
+                
+                if (index < currentStep - 1) {
+                    // Completed steps
+                    number.className = 'w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium';
+                    label.className = 'text-xs mt-1 text-blue-600 font-medium';
+                } else if (index === currentStep - 1) {
+                    // Current step
+                    number.className = 'w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium';
+                    label.className = 'text-xs mt-1 text-blue-600 font-medium';
+                } else {
+                    // Future steps
+                    number.className = 'w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-medium';
+                    label.className = 'text-xs mt-1 text-gray-500';
+                }
+            });
+        }
+
+        // Validation functions for each step
+        function validateStep1() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
-            const errorMessage = document.getElementById('error-message');
-            const successMessage = document.getElementById('success-message');
             
-            // Clear previous messages
-            errorMessage.classList.add('hidden');
-            successMessage.classList.add('hidden');
-            
-            // Validate passwords match
-            if (password !== confirmPassword) {
-                errorMessage.textContent = 'Passwords do not match.';
-                errorMessage.classList.remove('hidden');
-                errorMessage.classList.add('bg-red-100', 'text-red-700');
-                return;
+            // Simple email validation
+            if (!email.includes('@') || !email.includes('.')) {
+                showError('Please enter a valid email address');
+                return false;
             }
             
-            // Validate password length
+            // Password validation
             if (password.length < 6) {
-                errorMessage.textContent = 'Password must be at least 6 characters.';
-                errorMessage.classList.remove('hidden');
-                errorMessage.classList.add('bg-red-100', 'text-red-700');
+                showError('Password must be at least 6 characters');
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return false;
+            }
+            
+            // Store data
+            formData.email = email;
+            formData.password = password;
+            
+            hideError();
+            return true;
+        }
+
+        function validateStep2() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const profileImage = document.getElementById('profileImage').files[0];
+            
+            if (!name) {
+                showError('Full name is required');
+                return false;
+            }
+            
+            if (!phone) {
+                showError('Phone number is required');
+                return false;
+            }
+            
+            // Store data
+            formData.name = name;
+            formData.phone = phone;
+            formData.profileImage = profileImage;
+            
+            hideError();
+            return true;
+        }
+
+        function validateStep3() {
+            // Address fields are optional, just store whatever is entered
+            formData.address.street = document.getElementById('street').value;
+            formData.address.city = document.getElementById('city').value;
+            formData.address.postalCode = document.getElementById('postalCode').value;
+            formData.address.country = document.getElementById('country').value;
+            
+            hideError();
+            return true;
+        }
+
+        function populateReviewStep() {
+            document.getElementById('review-email').textContent = formData.email;
+            document.getElementById('review-name').textContent = `Name: ${formData.name}`;
+            document.getElementById('review-phone').textContent = `Phone: ${formData.phone}`;
+            
+            const addressParts = [];
+            if (formData.address.street) addressParts.push(formData.address.street);
+            if (formData.address.city) addressParts.push(formData.address.city);
+            if (formData.address.postalCode) addressParts.push(formData.address.postalCode);
+            if (formData.address.country) addressParts.push(formData.address.country);
+            
+            document.getElementById('review-address').textContent = addressParts.join(', ') || 'No address provided';
+        }
+
+        // Error handling
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            errorDiv.classList.add('block');
+        }
+
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+            document.getElementById('error-message').classList.remove('block');
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            successDiv.classList.add('block');
+        }
+
+        // Complete registration
+        document.getElementById('complete-registration').addEventListener('click', async function() {
+            if (!document.getElementById('terms').checked) {
+                showError('You must agree to the terms and conditions');
                 return;
             }
             
-            // Show loading state
-            document.getElementById('button-text').classList.add('hidden');
-            document.getElementById('button-spinner').classList.remove('hidden');
-            document.getElementById('register-button').disabled = true;
+            const button = this;
+            const buttonText = document.getElementById('complete-text');
+            const spinner = document.getElementById('complete-spinner');
+            const loadingScreen = document.getElementById('loading-screen');
             
-            // Create user with email and password
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    // User created successfully
-                    const user = userCredential.user;
-                    
-                    // Update user profile with name
-                    return user.updateProfile({
-                        displayName: name
-                    });
-                })
-                .then(() => {
-                    // Show success message
-                    successMessage.textContent = 'Account created successfully! Redirecting...';
-                    successMessage.classList.remove('hidden');
-                    successMessage.classList.add('bg-green-100', 'text-green-700');
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = '../dashboard/index.html';
-                    }, 2000);
-                })
-                .catch((error) => {
-                    // Handle errors
-                    let errorText;
-                    switch (error.code) {
-                        case 'auth/email-already-in-use':
-                            errorText = 'This email is already registered.';
-                            break;
-                        case 'auth/invalid-email':
-                            errorText = 'Invalid email address.';
-                            break;
-                        case 'auth/operation-not-allowed':
-                            errorText = 'Account creation is currently disabled.';
-                            break;
-                        case 'auth/weak-password':
-                            errorText = 'Password is too weak.';
-                            break;
-                        default:
-                            errorText = 'Registration failed. Please try again.';
+            // Show loading states
+            button.disabled = true;
+            buttonText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            loadingScreen.classList.remove('hidden');
+            
+            try {
+                // 1. Create auth user
+                loadingScreen.querySelector('p').textContent = 'Creating your account...';
+                const userCredential = await auth.createUserWithEmailAndPassword(
+                    formData.email, 
+                    formData.password
+                );
+                const user = userCredential.user;
+                
+                let profileImageUrl = '';
+                
+                // 2. Upload profile image if exists
+                if (formData.profileImage) {
+                    try {
+                        loadingScreen.querySelector('p').textContent = 'Uploading profile image...';
+                        
+                        // Initialize storage if not already done
+                        const storage = firebase.storage();
+                        const storageRef = storage.ref();
+                        const fileRef = storageRef.child(`users/${user.uid}/profile/${formData.profileImage.name}`);
+                        
+                        // Upload file
+                        const uploadTask = await fileRef.put(formData.profileImage);
+                        profileImageUrl = await uploadTask.ref.getDownloadURL();
+                    } catch (uploadError) {
+                        console.error('Profile image upload failed:', uploadError);
+                        // Continue without failing - profile image is optional
                     }
-                    
-                    errorMessage.textContent = errorText;
-                    errorMessage.classList.remove('hidden');
-                    errorMessage.classList.add('bg-red-100', 'text-red-700');
-                    
-                    // Reset button state
-                    document.getElementById('button-text').classList.remove('hidden');
-                    document.getElementById('button-spinner').classList.add('hidden');
-                    document.getElementById('register-button').disabled = false;
-                });
+                }
+                
+                // 3. Prepare user data
+                const userData = {
+                    uid: user.uid,
+                    name: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    profileImageUrl: profileImageUrl || null,
+                    address: formData.address,
+                    joinDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    emailVerified: false,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                // 4. Save to Firestore with explicit error handling
+                loadingScreen.querySelector('p').textContent = 'Saving your information...';
+                
+                // Use set() with merge: true to avoid overwriting existing data
+                await db.collection('users').doc(user.uid).set(userData, { merge: true })
+                    .then(() => console.log("User document successfully written!"))
+                    .catch(error => {
+                        console.error("Error writing user document:", error);
+                        throw error; // Re-throw to be caught by the outer catch
+                    });
+                
+                // 5. Send email verification
+                loadingScreen.querySelector('p').textContent = 'Sending verification email...';
+                await user.sendEmailVerification();
+                
+                // Update loading message
+                loadingScreen.querySelector('p').textContent = 'Registration complete! Redirecting...';
+                
+                // Redirect after delay
+                setTimeout(() => {
+                    window.location.href = '../dashboard/index.html';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                
+                // Hide loading states
+                loadingScreen.classList.add('hidden');
+                button.disabled = false;
+                buttonText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                
+                // Handle specific errors
+                let errorMessage = 'Registration failed. Please try again.';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'This email is already registered.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password should be at least 6 characters.';
+                } else if (error.code === 'permission-denied') {
+                    errorMessage = 'Database write failed. Please contact support.';
+                }
+                
+                showError(errorMessage);
+                
+                // Optional: Delete the user if Firestore write failed
+                if (auth.currentUser) {
+                    try {
+                        await auth.currentUser.delete();
+                        console.log("Rolled back user creation due to Firestore failure");
+                    } catch (deleteError) {
+                        console.error("Error deleting user after failed registration:", deleteError);
+                    }
+                }
+            }
         });
+
+        // Update the profile image handling in validateStep2
+        function validateStep2() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const profileImageInput = document.getElementById('profileImage');
+            
+            if (!name) {
+                showError('Full name is required');
+                return false;
+            }
+            
+            if (!phone) {
+                showError('Phone number is required');
+                return false;
+            }
+            
+            // Store data
+            formData.name = name;
+            formData.phone = phone;
+            
+            // Only store the file if one was selected
+            if (profileImageInput.files.length > 0) {
+                formData.profileImage = profileImageInput.files[0];
+            }
+            
+            hideError();
+            return true;
+        }
     </script>
 </body>
 </html>

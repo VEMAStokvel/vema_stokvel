@@ -1,182 +1,136 @@
-// auth.js
-import { 
-  auth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-  updateProfile
-} from './firebase.js';
+import { auth } from './firebase.js';
 
-// Common utility functions
-function showMessage(elementId, message, isError = true) {
-  const messageContainer = document.getElementById(elementId);
-  messageContainer.textContent = message;
-  messageContainer.classList.remove('hidden');
-  
-  // Set appropriate styling based on error/success
-  if (isError) {
-    messageContainer.classList.remove('bg-green-100', 'text-green-700');
-    messageContainer.classList.add('bg-red-100', 'text-red-700');
-  } else {
-    messageContainer.classList.remove('bg-red-100', 'text-red-700');
-    messageContainer.classList.add('bg-green-100', 'text-green-700');
-  }
-  
-  // Hide after 5 seconds
-  setTimeout(() => {
-    messageContainer.classList.add('hidden');
-  }, 5000);
-}
-
+// Common UI functions
 function showLoading(buttonId) {
-  const button = document.getElementById(buttonId);
-  const buttonText = button.querySelector('#button-text');
-  const spinner = button.querySelector('#button-spinner');
-  
-  button.disabled = true;
-  buttonText.classList.add('hidden');
-  spinner.classList.remove('hidden');
+    const button = document.getElementById(buttonId);
+    if (button) {
+        button.querySelector('#button-text').classList.add('hidden');
+        button.querySelector('#button-spinner').classList.remove('hidden');
+        button.disabled = true;
+    }
 }
 
 function hideLoading(buttonId) {
-  const button = document.getElementById(buttonId);
-  const buttonText = button.querySelector('#button-text');
-  const spinner = button.querySelector('#button-spinner');
-  
-  button.disabled = false;
-  buttonText.classList.remove('hidden');
-  spinner.classList.add('hidden');
+    const button = document.getElementById(buttonId);
+    if (button) {
+        button.querySelector('#button-text').classList.remove('hidden');
+        button.querySelector('#button-spinner').classList.add('hidden');
+        button.disabled = false;
+    }
 }
 
-// Handle registration
-export function setupRegistration() {
-  const registerForm = document.getElementById('register-form');
-  if (!registerForm) return;
-
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const name = registerForm['name'].value;
-    const email = registerForm['email'].value;
-    const password = registerForm['password'].value;
-    const termsChecked = registerForm['terms'].checked;
-    
-    // Validate terms checkbox
-    if (!termsChecked) {
-      showMessage('message-container', 'You must accept the terms and conditions', true);
-      return;
+function showError(message, errorElementId) {
+    const errorElement = document.getElementById(errorElementId);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
+        errorElement.classList.add('bg-red-100', 'text-red-700');
     }
-    
-    showLoading('register-button');
-    
-    try {
-      // Create user account
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Update user profile with display name
-      await updateProfile(user, {
-        displayName: name
-      });
-      
-      // Send email verification
-      await sendEmailVerification(user);
-      
-      showMessage('message-container', 'Registration successful! Please check your email for verification.', false);
-      registerForm.reset();
-      
-      // Redirect to login page after 3 seconds
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 3000);
-    } catch (error) {
-      let errorMessage = 'An error occurred during registration.';
-      
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = 'This email is already registered.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'Password should be at least 6 characters.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection.';
-          break;
-        default:
-          errorMessage = error.message;
-      }
-      
-      showMessage('message-container', errorMessage, true);
-    } finally {
-      hideLoading('register-button');
-    }
-  });
 }
 
-// Handle login
-export function setupLogin() {
-  const loginForm = document.getElementById('login-form');
-  if (!loginForm) return;
-
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = loginForm['email'].value;
-    const password = loginForm['password'].value;
-    
-    showLoading('login-button');
-    
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Check if email is verified
-      if (!user.emailVerified) {
-        await sendEmailVerification(user);
-        showMessage('error-message', 'Please verify your email first. A new verification email has been sent.', true);
-        return;
-      }
-      
-      // Redirect to dashboard or home page after successful login
-      window.location.href = 'dashboard.html';
-    } catch (error) {
-      let errorMessage = 'An error occurred during login.';
-      
-      switch (error.code) {
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email.';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password. Please try again.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Account temporarily disabled. Try again later or reset your password.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection.';
-          break;
-        default:
-          errorMessage = error.message;
-      }
-      
-      showMessage('error-message', errorMessage, true);
-    } finally {
-      hideLoading('login-button');
+function showSuccess(message, successElementId) {
+    const successElement = document.getElementById(successElementId);
+    if (successElement) {
+        successElement.textContent = message;
+        successElement.classList.remove('hidden');
+        successElement.classList.add('bg-green-100', 'text-green-700');
     }
-  });
 }
 
-// Initialize the appropriate auth setup based on the page
-document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('register-form')) {
-    setupRegistration();
-  } else if (document.getElementById('login-form')) {
-    setupLogin();
-  }
-});
+// Login function
+export function setupLoginForm() {
+    const loginForm = document.getElementById('login-form');
+    if (!loginForm) return;
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorMessage = document.getElementById('error-message');
+        
+        showLoading('login-button');
+        errorMessage.classList.add('hidden');
+        
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+            window.location.href = '../dashboard/index.html';
+        } catch (error) {
+            let errorText;
+            switch (error.code) {
+                case 'auth/invalid-email': errorText = 'Invalid email address.'; break;
+                case 'auth/user-disabled': errorText = 'This account has been disabled.'; break;
+                case 'auth/user-not-found': errorText = 'No account found with this email.'; break;
+                case 'auth/wrong-password': errorText = 'Incorrect password.'; break;
+                default: errorText = 'Login failed. Please try again.';
+            }
+            showError(errorText, 'error-message');
+        } finally {
+            hideLoading('login-button');
+        }
+    });
+}
+
+// Register function
+export function setupRegisterForm() {
+    const registerForm = document.getElementById('register-form');
+    if (!registerForm) return;
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        
+        // Clear previous messages
+        errorMessage.classList.add('hidden');
+        successMessage.classList.add('hidden');
+        
+        // Validate passwords
+        if (password !== confirmPassword) {
+            showError('Passwords do not match.', 'error-message');
+            return;
+        }
+        
+        if (password.length < 6) {
+            showError('Password must be at least 6 characters.', 'error-message');
+            return;
+        }
+        
+        showLoading('register-button');
+        
+        try {
+            // Create user
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            
+            // Update profile with name
+            await userCredential.user.updateProfile({
+                displayName: name
+            });
+            
+            // Show success
+            showSuccess('Account created successfully! Redirecting...', 'success-message');
+            
+            // Redirect
+            setTimeout(() => {
+                window.location.href = '../dashboard/index.html';
+            }, 2000);
+        } catch (error) {
+            let errorText;
+            switch (error.code) {
+                case 'auth/email-already-in-use': errorText = 'This email is already registered.'; break;
+                case 'auth/invalid-email': errorText = 'Invalid email address.'; break;
+                case 'auth/operation-not-allowed': errorText = 'Account creation is currently disabled.'; break;
+                case 'auth/weak-password': errorText = 'Password is too weak.'; break;
+                default: errorText = 'Registration failed. Please try again.';
+            }
+            showError(errorText, 'error-message');
+        } finally {
+            hideLoading('register-button');
+        }
+    });
+}

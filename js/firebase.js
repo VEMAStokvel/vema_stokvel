@@ -1,14 +1,4 @@
-// firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// Your web app's Firebase configuration
+// Firebase configuration and initialization
 const firebaseConfig = {
   apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
   authDomain: "vema-7606a.firebaseapp.com",
@@ -19,14 +9,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-// Export auth functions
-export { 
-  auth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-  updateProfile
-};
+export const auth = firebase.auth();

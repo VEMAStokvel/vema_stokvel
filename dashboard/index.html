@@ -6,11 +6,41 @@
     <title>Vema Stokvel - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <!-- Firebase SDK v12 -->
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-gray-50">
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-gray-700">Loading dashboard...</p>
+    </div>
+
+    <!-- Error modal -->
+    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold flex items-center text-red-600">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="error-title">Error</span>
+                </h3>
+                <button id="close-error-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <p id="error-message" class="text-gray-700">An error occurred.</p>
+            </div>
+            <div class="flex justify-end">
+                <button id="confirm-error" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Menu Button -->
     <div class="md:hidden fixed top-4 right-4 z-50">
         <button id="mobile-menu-btn" class="p-2 rounded-md text-blue-800 bg-white shadow-md">
@@ -28,7 +58,6 @@
         <div id="sidebar" class="bg-blue-800 text-white w-64 flex-shrink-0 fixed md:relative transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-40 h-full">
             <div class="p-4 flex items-center space-x-2 border-b border-blue-700">
                 <img src="../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
-                <!-- <span class="text-lg font-bold">Vema Stokvel</span> -->
             </div>
             <nav class="mt-6">
                 <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold tracking-wider">Main</div>
@@ -72,6 +101,12 @@
             <!-- Top Bar -->
             <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-30 md:ml-0">
                 <h1 class="text-2xl font-semibold text-gray-800">Dashboard</h1>
+                <div class="flex items-center space-x-4">
+                    <span id="user-name" class="text-gray-700">Loading...</span>
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-user text-blue-600"></i>
+                    </div>
+                </div>
             </header>
 
             <!-- Dashboard Content -->
@@ -176,19 +211,19 @@
                                     <div>
                                         <label class="block text-sm text-gray-500 mb-1">Bank Name</label>
                                         <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
-                                            Vema Stokvel Bank
+                                            FNB - Stokvel House
                                         </div>
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-500 mb-1">Account Number</label>
                                         <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
-                                            1234 5678 9012 3456
+                                            63021443815
                                         </div>
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-500 mb-1">Branch Code</label>
                                         <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
-                                            632005
+                                            210835
                                         </div>
                                     </div>
                                     <div>
@@ -391,6 +426,130 @@
     </div>
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Show loading state
+        function showLoading(message = 'Loading...') {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.querySelector('p').textContent = message;
+            loadingOverlay.classList.remove('hidden');
+        }
+
+        // Hide loading state
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // Show error modal
+        function showError(title, message) {
+            document.getElementById('error-title').textContent = title;
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-modal').classList.remove('hidden');
+        }
+
+        // Close error modal
+        function closeErrorModal() {
+            document.getElementById('error-modal').classList.add('hidden');
+        }
+
+        // Set up error modal event listeners
+        document.getElementById('close-error-modal').addEventListener('click', closeErrorModal);
+        document.getElementById('confirm-error').addEventListener('click', closeErrorModal);
+
+        // Check authentication state
+        function checkAuthState() {
+            showLoading('Checking authentication...');
+            
+            auth.onAuthStateChanged((user) => {
+                if (!user) {
+                    // User is not logged in, redirect to login page
+                    window.location.href = '../auth/login.html';
+                } else {
+                    // User is logged in, initialize dashboard
+                    hideLoading();
+                    initDashboard();
+                    loadUserData(user);
+                }
+            }, (error) => {
+                showError('Authentication Error', 'Failed to check authentication status. Please try again.');
+                console.error('Auth state error:', error);
+            });
+        }
+
+        // Load user data from Firestore
+        function loadUserData(user) {
+            showLoading('Loading user data...');
+            
+            db.collection('users').doc(user.uid).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        updateUserUI(userData);
+                    } else {
+                        console.log('No user data found');
+                    }
+                    hideLoading();
+                })
+                .catch((error) => {
+                    showError('Data Error', 'Failed to load user data. Please refresh the page.');
+                    console.error('Error loading user data:', error);
+                });
+        }
+
+        // Update UI with user data
+        function updateUserUI(userData) {
+            document.getElementById('user-name').textContent = userData.name || 'User';
+            document.getElementById('welcome-name').textContent = userData.name ? userData.name.split(' ')[0] : 'Member';
+            
+            if (userData.joinDate) {
+                const joinYear = new Date(userData.joinDate).getFullYear();
+                document.getElementById('member-since').textContent = joinYear;
+            }
+            
+            // Store user data in global variable
+            window.userData = {
+                ...userData,
+                email: auth.currentUser.email,
+                phone: userData.phone || ''
+            };
+        }
+
+        // Logout function
+        function logout() {
+            showLoading('Logging out...');
+            
+            auth.signOut()
+                .then(() => {
+                    // Redirect to login page after successful logout
+                    window.location.href = '../index.html';
+                })
+                .catch((error) => {
+                    hideLoading();
+                    showError('Logout Error', 'Failed to logout. Please try again.');
+                    console.error('Logout error:', error);
+                });
+        }
+
+        // Set up logout button
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+
         // Mobile Menu Toggle
         document.getElementById('mobile-menu-btn').addEventListener('click', function() {
             const sidebar = document.getElementById('sidebar');
@@ -400,50 +559,35 @@
             document.getElementById('menu-open-icon').classList.toggle('hidden');
             document.getElementById('menu-close-icon').classList.toggle('hidden');
         });
-    
+
         // Generate random reference number with stokvel type
         function generateReference() {
-            const userId = 'e.g January Stokvel '; // Replace with actual user ID from your system
-            const stokvelType = ''; // Replace with actual stokvel type from system
-            const stokvelId = ''; // Replace with actual stokvel ID
+            const userId = window.userData?.name || 'USER';
+            const stokvelType = 'MONTHLY'; // Replace with actual stokvel type from system
+            const stokvelId = 'STK456'; // Replace with actual stokvel ID
             const randomNum = Math.floor(100 + Math.random() * 900);
-            return ` ${userId}-${stokvelType}-${stokvelId}-${randomNum}`;
+            return `${userId}-${stokvelType}-${stokvelId}-${randomNum}`;
         }
-    
+
         // Format currency with R and commas
         function formatCurrency(amount) {
             return 'R' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
         }
-    
+
         // Format date for display
         function formatDate(dateString) {
             const options = { day: 'numeric', month: 'long', year: 'numeric' };
             return new Date(dateString).toLocaleDateString('en-ZA', options);
         }
-    
+
         // Initialize dashboard data
         function initDashboard() {
             // Set reference number
             document.getElementById('reference-number').textContent = generateReference();
             
-            // Set user data (replace with actual data from your system)
-            const userData = {
-                name: 'John Doe',
-                joinDate: '2022-01-15',
-                totalSavings: 5250.00,
-                activeStokvels: 2,
-                phone: '+27721234567', // User's phone number with country code
-                email: 'user@example.com' // User's email
-            };
-            
-            document.getElementById('user-name').textContent = userData.name;
-            document.getElementById('welcome-name').textContent = userData.name.split(' ')[0];
-            document.getElementById('member-since').textContent = new Date(userData.joinDate).getFullYear();
-            document.getElementById('total-savings').textContent = formatCurrency(userData.totalSavings);
-            document.getElementById('active-stokvels').textContent = userData.activeStokvels;
-            
-            // Store user data in global variable
-            window.userData = userData;
+            // Set initial values (will be updated from Firestore)
+            document.getElementById('total-savings').textContent = formatCurrency(0);
+            document.getElementById('active-stokvels').textContent = '0';
             
             // Load stokvel data
             loadStokvelData();
@@ -454,98 +598,115 @@
             // Set up deposit amount modal
             setupDepositModal();
         }
-    
+
         // Load stokvel data
         function loadStokvelData() {
-            // Replace with actual data from your system
-            const stokvels = [
-                {
-                    name: 'Family Savings',
-                    type: 'Monthly',
-                    balance: 3500.00,
-                    nextContribution: '2023-06-15',
-                    status: 'Active'
-                },
-                {
-                    name: 'Education Fund',
-                    type: 'Quarterly',
-                    balance: 1750.00,
-                    nextContribution: '2023-06-30',
-                    status: 'Active'
-                }
-            ];
-    
-            const stokvelsBody = document.getElementById('stokvels-body');
-            stokvelsBody.innerHTML = stokvels.map(stokvel => `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium">${stokvel.name}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-gray-500">${stokvel.type}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium">${formatCurrency(stokvel.balance)}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-gray-500">${formatDate(stokvel.nextContribution)}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${stokvel.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-                            ${stokvel.status}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
+            showLoading('Loading stokvel data...');
+            
+            // In a real app, you would fetch this from Firestore
+            setTimeout(() => {
+                const stokvels = [
+                    {
+                        name: 'Family Savings',
+                        type: 'Monthly',
+                        balance: 3500.00,
+                        nextContribution: '2023-06-15',
+                        status: 'Active'
+                    },
+                    {
+                        name: 'Education Fund',
+                        type: 'Quarterly',
+                        balance: 1750.00,
+                        nextContribution: '2023-06-30',
+                        status: 'Active'
+                    }
+                ];
+
+                const stokvelsBody = document.getElementById('stokvels-body');
+                stokvelsBody.innerHTML = stokvels.map(stokvel => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium">${stokvel.name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-gray-500">${stokvel.type}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium">${formatCurrency(stokvel.balance)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-gray-500">${formatDate(stokvel.nextContribution)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${stokvel.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${stokvel.status}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+
+                // Update total savings and active stokvels
+                const totalSavings = stokvels.reduce((sum, stokvel) => sum + stokvel.balance, 0);
+                document.getElementById('total-savings').textContent = formatCurrency(totalSavings);
+                document.getElementById('active-stokvels').textContent = stokvels.length;
+
+                hideLoading();
+            }, 1000);
         }
-    
+
         // Load recent transactions
         function loadRecentTransactions() {
-            // Replace with actual data from your system
-            const transactions = [
-                {
-                    description: 'Contribution - Family Savings',
-                    date: '2023-05-15',
-                    amount: 500.00,
-                    type: 'credit'
-                },
-                {
-                    description: 'Payout - Education Fund',
-                    date: '2023-05-01',
-                    amount: 1200.00,
-                    type: 'debit'
-                },
-                {
-                    description: 'Contribution - Education Fund',
-                    date: '2023-04-15',
-                    amount: 500.00,
-                    type: 'credit'
-                }
-            ];
-    
-            const transactionsContainer = document.getElementById('recent-transactions');
-            transactionsContainer.innerHTML = transactions.map(transaction => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div>
-                        <div class="font-medium">${transaction.description}</div>
-                        <div class="text-sm text-gray-500">${formatDate(transaction.date)}</div>
+            showLoading('Loading transactions...');
+            
+            // In a real app, you would fetch this from Firestore
+            setTimeout(() => {
+                const transactions = [
+                    {
+                        description: 'Contribution - Family Savings',
+                        date: '2023-05-15',
+                        amount: 500.00,
+                        type: 'credit'
+                    },
+                    {
+                        description: 'Payout - Education Fund',
+                        date: '2023-05-01',
+                        amount: 1200.00,
+                        type: 'debit'
+                    },
+                    {
+                        description: 'Contribution - Education Fund',
+                        date: '2023-04-15',
+                        amount: 500.00,
+                        type: 'credit'
+                    }
+                ];
+
+                const transactionsContainer = document.getElementById('recent-transactions');
+                transactionsContainer.innerHTML = transactions.map(transaction => `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <div class="font-medium">${transaction.description}</div>
+                            <div class="text-sm text-gray-500">${formatDate(transaction.date)}</div>
+                        </div>
+                        <div class="font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-blue-600'}">
+                            ${transaction.type === 'credit' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                        </div>
                     </div>
-                    <div class="font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-blue-600'}">
-                        ${transaction.type === 'credit' ? '+' : '-'}${formatCurrency(transaction.amount)}
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+
+                hideLoading();
+            }, 1500);
         }
-    
+
         // Validate contribution amount
         function validateAmount(amount) {
             if (!amount || isNaN(amount)) {
-                alert('Please enter a valid amount');
+                showError('Invalid Amount', 'Please enter a valid amount');
                 return false;
             }
             
             if (amount < 100) {
-                alert('Minimum contribution amount is R100');
+                showError('Minimum Amount', 'Minimum contribution amount is R100');
                 return false;
             }
             
@@ -580,8 +741,8 @@
                 });
             });
         }
-    
-        // WhatsApp Notification Function - Improved
+
+        // WhatsApp Notification Function
         function sendWhatsAppConfirmation() {
             const amount = document.getElementById('contribution-amount').value;
             if (!validateAmount(amount)) {
@@ -628,8 +789,8 @@
             // Show confirmation
             showPaymentConfirmation(amount);
         }
-    
-        // Email Notification Function - Improved
+
+        // Email Notification Function
         function sendEmailConfirmation() {
             const amount = document.getElementById('contribution-amount').value;
             if (!validateAmount(amount)) {
@@ -697,11 +858,17 @@
             document.getElementById('cancel-payment').addEventListener('click', closeModal);
             
             document.getElementById('confirm-payment').addEventListener('click', function() {
-                alert('Thank you! Your payment confirmation has been submitted. We will process it shortly.');
-                closeModal();
+                showLoading('Processing payment confirmation...');
+                
+                // In a real app, you would save this to Firestore
+                setTimeout(() => {
+                    hideLoading();
+                    alert('Thank you! Your payment confirmation has been submitted. We will process it shortly.');
+                    closeModal();
+                }, 1500);
             });
         }
-    
+
         // Close modal when clicking outside
         document.addEventListener('click', function(event) {
             const modal = document.getElementById('payment-modal');
@@ -713,10 +880,15 @@
             if (event.target === depositModal) {
                 depositModal.classList.add('hidden');
             }
+            
+            const errorModal = document.getElementById('error-modal');
+            if (event.target === errorModal) {
+                errorModal.classList.add('hidden');
+            }
         });
-    
-        // Initialize the dashboard when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', checkAuthState);
     </script>
 </body>
 </html>
