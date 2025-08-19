@@ -5,17 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vema Stokvel - Funeral Cover</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="../../css/styles.css" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="../../js/firebase.js" defer></script>
-    <script src="../../js/auth.js" defer></script>
-    <script src="../../js/utils.js" defer></script>
-    <script src="../../js/funeral.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
     <style>
-        /* Custom styles for mobile menu */
         .mobile-menu-btn {
             position: fixed;
             top: 1rem;
@@ -23,15 +18,29 @@
             z-index: 50;
         }
         .header-with-menu {
-            padding-right: 3.5rem; /* Space for menu icon */
+            padding-right: 3.5rem;
         }
         @media (min-width: 768px) {
             .header-with-menu {
-                padding-right: 1rem; /* Reset for desktop */
+                padding-right: 1rem;
             }
             .mobile-menu-btn {
-                display: none; /* Hide on desktop */
+                display: none;
             }
+        }
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -111,14 +120,21 @@
                         <div>
                             <p class="text-gray-600 mb-2">Current Status</p>
                             <div class="flex items-center">
-                                <span id="cover-status" class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 mr-3">Inactive</span>
-                                <span id="cover-type" class="text-gray-700">No active cover</span>
+                                <span id="cover-status" class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 mr-3">Loading...</span>
+                                <span id="cover-type" class="text-gray-700"><div class="loading-spinner"></div>Loading cover details</span>
+                            </div>
+                            <div id="cover-details" class="mt-2 hidden">
+                                <p class="text-gray-600">Premium: <span id="cover-premium" class="font-medium">R0</span>/month</p>
+                                <p class="text-gray-600">Started: <span id="cover-date" class="font-medium">Not started</span></p>
+                                <p class="text-gray-600">Total Premium: <span id="total-premium" class="font-medium">R0</span>/month</p>
                             </div>
                         </div>
-                        <button id="manage-cover-btn" class="mt-4 md:mt-0 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Manage Cover</button>
+                        <button id="manage-cover-btn" class="mt-4 md:mt-0 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            <span id="manage-cover-text">Manage Cover</span>
+                        </button>
                     </div>
-                </div>
-
+                </div>  
+                
                 <!-- Cover Description -->
                 <div class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
                     <h2 class="text-lg md:text-xl font-semibold mb-4">Vema Funeral Cover – Helping You in Tough Times</h2>
@@ -305,50 +321,6 @@
         </div>
     </div>
 
-    <!-- Plan Selection Modal -->
-    <div id="plan-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-lg p-4 md:p-6 max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg md:text-xl font-semibold" id="plan-modal-title">Select Funeral Plan</h3>
-                <button id="close-plan-modal" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <form id="plan-form">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm mb-2">Selected Plan</label>
-                    <p class="font-semibold text-sm md:text-base" id="selected-plan-name">Family Plan</p>
-                    <p class="text-gray-600 text-xs md:text-sm" id="selected-plan-price">R199/month</p>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm mb-2">Payment Method</label>
-                    <select class="w-full p-2 border rounded text-sm md:text-base" id="payment-method" required>
-                        <option value="">Select payment method</option>
-                        <option value="paystack">Paystack</option>
-                        <option value="stokvel">Deduct from Stokvel</option>
-                        <option value="debit-order">Debit Order</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="rounded text-blue-600" required>
-                        <span class="ml-2 text-xs md:text-sm text-gray-700">I confirm all family details are correct</span>
-                    </label>
-                </div>
-                <div class="mb-6">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="rounded text-blue-600" required>
-                        <span class="ml-2 text-xs md:text-sm text-gray-700">I agree to the terms and conditions</span>
-                    </label>
-                </div>
-                <div class="flex space-x-3">
-                    <button type="button" id="cancel-plan" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300 text-sm md:text-base">Cancel</button>
-                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm md:text-base">Confirm Plan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Family Details Modal -->
     <div id="family-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white rounded-lg p-4 md:p-6 max-w-2xl w-full max-h-screen overflow-auto mx-4">
@@ -364,11 +336,11 @@
                     <div class="grid md:grid-cols-2 gap-3 md:gap-4">
                         <div>
                             <label class="block text-gray-700 text-xs md:text-sm mb-2">Full Name</label>
-                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" value="John Doe" readonly>
+                            <input type="text" id="main-member-name" class="w-full p-2 border rounded text-sm md:text-base bg-gray-100" readonly>
                         </div>
                         <div>
                             <label class="block text-gray-700 text-xs md:text-sm mb-2">ID Number</label>
-                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Enter ID number" required>
+                            <input type="text" id="main-member-id" class="w-full p-2 border rounded text-sm md:text-base bg-gray-100" readonly>
                         </div>
                     </div>
                 </div>
@@ -384,11 +356,11 @@
                     <div id="spouse-fields" class="grid md:grid-cols-2 gap-3 md:gap-4 hidden">
                         <div>
                             <label class="block text-gray-700 text-xs md:text-sm mb-2">Full Name</label>
-                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Spouse name">
+                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Spouse name" id="spouse-name">
                         </div>
                         <div>
                             <label class="block text-gray-700 text-xs md:text-sm mb-2">ID Number</label>
-                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Spouse ID number">
+                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Spouse ID number" id="spouse-id">
                         </div>
                     </div>
                 </div>
@@ -415,19 +387,40 @@
 
                 <div class="flex justify-end space-x-3">
                     <button type="button" id="cancel-family" class="bg-gray-200 text-gray-800 px-3 md:px-4 py-1 md:py-2 rounded hover:bg-gray-300 text-sm md:text-base">Cancel</button>
-                    <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-2 rounded hover:bg-blue-700 text-sm md:text-base">Save Details</button>
+                    <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-2 rounded hover:bg-blue-700 text-sm md:text-base" id="save-family-btn">
+                        <span id="save-family-text">Save Details</span>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+    
+        // Store user profile data
+        let userProfileData = null;
+    
         // Mobile menu toggle functionality
         document.getElementById('mobile-menu-button').addEventListener('click', function() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
         });
-
+    
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('sidebar');
@@ -437,12 +430,12 @@
                 sidebar.classList.add('-translate-x-full');
             }
         });
-
+    
         // Toggle spouse fields
         document.getElementById('has-spouse').addEventListener('change', function() {
             document.getElementById('spouse-fields').classList.toggle('hidden', !this.checked);
         });
-
+    
         // Add child fields
         document.getElementById('add-child').addEventListener('click', function() {
             const childrenFields = document.getElementById('children-fields');
@@ -460,11 +453,11 @@
                 <div class="grid md:grid-cols-2 gap-3 md:gap-4">
                     <div>
                         <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
-                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Child name" required>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-name" placeholder="Child name" required>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs md:text-sm mb-1">ID/Birth Certificate Number</label>
-                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="ID/Birth certificate" required>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-id" placeholder="ID/Birth certificate" required>
                     </div>
                 </div>
             `;
@@ -476,7 +469,7 @@
                 childDiv.remove();
             });
         });
-
+    
         // Add parent fields
         document.getElementById('add-parent').addEventListener('click', function() {
             const parentsFields = document.getElementById('parents-fields');
@@ -494,16 +487,16 @@
                 <div class="grid md:grid-cols-2 gap-3 md:gap-4">
                     <div>
                         <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
-                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Parent name" required>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-name" placeholder="Parent name" required>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs md:text-sm mb-1">ID Number</label>
-                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Parent ID" required>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-id" placeholder="Parent ID" required>
                     </div>
                 </div>
                 <div class="mt-3">
                     <label class="block text-gray-700 text-xs md:text-sm mb-1">Relationship</label>
-                    <select class="w-full p-2 border rounded text-sm md:text-base" required>
+                    <select class="w-full p-2 border rounded text-sm md:text-base parent-relationship" required>
                         <option value="">Select relationship</option>
                         <option value="mother">Mother</option>
                         <option value="father">Father</option>
@@ -520,7 +513,7 @@
                 parentDiv.remove();
             });
         });
-
+    
         // Plan selection
         document.querySelectorAll('.select-plan').forEach(button => {
             button.addEventListener('click', function() {
@@ -537,16 +530,8 @@
                 window.location.href = 'Funeral Widget/funeral-form.html';
             });
         });
-
+    
         // Modal close buttons
-        document.getElementById('close-plan-modal').addEventListener('click', function() {
-            document.getElementById('plan-modal').classList.add('hidden');
-        });
-        
-        document.getElementById('cancel-plan').addEventListener('click', function() {
-            document.getElementById('plan-modal').classList.add('hidden');
-        });
-        
         document.getElementById('close-family-modal').addEventListener('click', function() {
             document.getElementById('family-modal').classList.add('hidden');
         });
@@ -554,24 +539,518 @@
         document.getElementById('cancel-family').addEventListener('click', function() {
             document.getElementById('family-modal').classList.add('hidden');
         });
-
+    
         // Manage cover button
         document.getElementById('manage-cover-btn').addEventListener('click', function() {
-            document.getElementById('family-modal').classList.remove('hidden');
+            const user = auth.currentUser;
+            
+            if (user) {
+                // Show modal first
+                document.getElementById('family-modal').classList.remove('hidden');
+                
+                // Load data
+                loadUserFuneralData(user.uid);
+            } else {
+                alert('Please log in to manage your family details.');
+            }
         });
 
-        // Form submissions
-        document.getElementById('plan-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Plan application submitted successfully!');
-            document.getElementById('plan-modal').classList.add('hidden');
-        });
-        
+        // Function to load user profile data
+        function loadUserProfileData(userId) {
+            return db.collection("users").doc(userId).get()
+                .then((userDoc) => {
+                    if (userDoc.exists) {
+                        userProfileData = userDoc.data();
+                        console.log('User profile data loaded:', userProfileData);
+                        
+                        // Pre-populate the main member fields in the Family Details modal
+                        document.getElementById('main-member-name').value = 
+                            userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                        document.getElementById('main-member-id').value = 
+                            userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                        
+                        return userProfileData;
+                    } else {
+                        console.warn('User document does not exist');
+                        return null;
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error loading user profile: ", error);
+                    return null;
+                });
+        }
+
+        // Function to load user funeral data
+        function loadUserFuneralData(userId) {
+            console.log('Loading funeral data for user:', userId);
+
+            const nameField = document.getElementById('main-member-name');
+            const idField = document.getElementById('main-member-id');
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverPremium = document.getElementById('cover-premium');
+            const coverDate = document.getElementById('cover-date');
+            const totalPremium = document.getElementById('total-premium');
+            const coverDetails = document.getElementById('cover-details');
+            const hasSpouseCheckbox = document.getElementById('has-spouse');
+            const spouseNameField = document.getElementById('spouse-name');
+            const spouseIdField = document.getElementById('spouse-id');
+            const childrenFields = document.getElementById('children-fields');
+            const parentsFields = document.getElementById('parents-fields');
+
+            // Show loading state
+            document.getElementById('save-family-text').innerHTML = '<div class="loading-spinner"></div>Loading...';
+            document.getElementById('save-family-btn').disabled = true;
+
+            // Clear existing fields
+            childrenFields.innerHTML = '';
+            parentsFields.innerHTML = '';
+
+            // First ensure we have user profile data
+            if (!userProfileData) {
+                loadUserProfileData(userId).then(() => {
+                    // Now load funeral data
+                    loadFuneralDataFromFirestore(userId);
+                });
+            } else {
+                // We already have user data, just load funeral data
+                loadFuneralDataFromFirestore(userId);
+            }
+        }
+
+        // Function to load funeral data from Firestore
+        function loadFuneralDataFromFirestore(userId) {
+            const nameField = document.getElementById('main-member-name');
+            const idField = document.getElementById('main-member-id');
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverPremium = document.getElementById('cover-premium');
+            const coverDate = document.getElementById('cover-date');
+            const totalPremium = document.getElementById('total-premium');
+            const coverDetails = document.getElementById('cover-details');
+            const hasSpouseCheckbox = document.getElementById('has-spouse');
+            const spouseNameField = document.getElementById('spouse-name');
+            const spouseIdField = document.getElementById('spouse-id');
+            const childrenFields = document.getElementById('children-fields');
+            const parentsFields = document.getElementById('parents-fields');
+
+            db.collection("users").doc(userId).collection("funeral")
+                .limit(1)
+                .get()
+                .then((querySnapshot) => {
+                    console.log('Found', querySnapshot.size, 'funeral documents');
+                    
+                    if (!querySnapshot.empty) {
+                        const funeralDoc = querySnapshot.docs[0];
+                        const funeralData = funeralDoc.data();
+                        console.log('Funeral document data:', funeralData);
+                        
+                        // Update cover status and details
+                        coverStatus.textContent = 'Active';
+                        coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-200 text-green-800 mr-3';
+                        coverType.textContent = 'Family Funeral Cover';
+                        coverDetails.classList.remove('hidden');
+                        
+                        // Populate main member details - use funeral data if available, otherwise use profile data
+                        if (funeralData.mainMember && typeof funeralData.mainMember === 'object') {
+                            const fullName = funeralData.mainMember.fullName;
+                            const idNumber = funeralData.mainMember.idNumber;
+                            const memberPremium = funeralData.mainMember.premium;
+                            
+                            nameField.value = fullName || userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                            idField.value = idNumber || userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                            
+                            if (memberPremium) {
+                                coverPremium.textContent = `R${memberPremium}`;
+                            } else {
+                                coverPremium.textContent = 'R75';
+                            }
+                        } else {
+                            // Use profile data if no funeral data
+                            coverPremium.textContent = 'R75';
+                            nameField.value = userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                            idField.value = userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                        }
+                        
+                        // Update total premium and date
+                        if (funeralData.totalMonthlyPremium) {
+                            totalPremium.textContent = `R${funeralData.totalMonthlyPremium}`;
+                        } else {
+                            totalPremium.textContent = 'R75';
+                        }
+                        
+                        if (funeralData.declaration && funeralData.declaration.submittedAt) {
+                            const submittedDate = funeralData.declaration.submittedAt.toDate();
+                            coverDate.textContent = submittedDate.toLocaleDateString('en-ZA', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                        } else if (funeralData.declaration && funeralData.declaration.date) {
+                            coverDate.textContent = funeralData.declaration.date;
+                        } else {
+                            coverDate.textContent = 'Date not available';
+                        }
+
+                        // Populate spouse details if exists
+                        if (funeralData.spouse && funeralData.spouse.fullName) {
+                            hasSpouseCheckbox.checked = true;
+                            document.getElementById('spouse-fields').classList.remove('hidden');
+                            spouseNameField.value = funeralData.spouse.fullName || '';
+                            spouseIdField.value = funeralData.spouse.idNumber || '';
+                        } else {
+                            hasSpouseCheckbox.checked = false;
+                            document.getElementById('spouse-fields').classList.add('hidden');
+                        }
+
+                        // Populate children details
+                        if (funeralData.children && Array.isArray(funeralData.children)) {
+                            funeralData.children.forEach((child, index) => {
+                                const childDiv = document.createElement('div');
+                                childDiv.className = 'border rounded-lg p-3 md:p-4 bg-gray-50';
+                                childDiv.innerHTML = `
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h5 class="font-medium text-sm md:text-base">Child ${index + 1}</h5>
+                                        <button type="button" class="text-red-500 hover:text-red-700 remove-child">
+                                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </div>
+                                    <div class="grid md:grid-cols-2 gap-3 md:gap-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
+                                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-name" placeholder="Child name" value="${child.fullName || ''}" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-xs md:text-sm mb-1">ID/Birth Certificate Number</label>
+                                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-id" placeholder="ID/Birth certificate" value="${child.idNumber || ''}" required>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                childrenFields.appendChild(childDiv);
+                                
+                                // Add event listener to remove button
+                                childDiv.querySelector('.remove-child').addEventListener('click', function() {
+                                    childDiv.remove();
+                                });
+                            });
+                        }
+
+                        // Populate parents details
+                        if (funeralData.extendedMembers && Array.isArray(funeralData.extendedMembers)) {
+                            funeralData.extendedMembers.forEach((parent, index) => {
+                                if (parent.relationship && (parent.relationship === 'mother' || parent.relationship === 'father' || 
+                                    parent.relationship === 'grandmother' || parent.relationship === 'grandfather')) {
+                                    const parentDiv = document.createElement('div');
+                                    parentDiv.className = 'border rounded-lg p-3 md:p-4 bg-gray-50';
+                                    parentDiv.innerHTML = `
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h5 class="font-medium text-sm md:text-base">${parent.relationship.charAt(0).toUpperCase() + parent.relationship.slice(1)} ${index + 1}</h5>
+                                            <button type="button" class="text-red-500 hover:text-red-700 remove-parent">
+                                                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                        <div class="grid md:grid-cols-2 gap-3 md:gap-4">
+                                            <div>
+                                                <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
+                                                <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-name" placeholder="Parent name" value="${parent.fullName || ''}" required>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 text-xs md:text-sm mb-1">ID Number</label>
+                                                <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-id" placeholder="Parent ID" value="${parent.idNumber || ''}" required>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="block text-gray-700 text-xs md:text-sm mb-1">Relationship</label>
+                                            <select class="w-full p-2 border rounded text-sm md:text-base parent-relationship" required>
+                                                <option value="">Select relationship</option>
+                                                <option value="mother" ${parent.relationship === 'mother' ? 'selected' : ''}>Mother</option>
+                                                <option value="father" ${parent.relationship === 'father' ? 'selected' : ''}>Father</option>
+                                                <option value="grandmother" ${parent.relationship === 'grandmother' ? 'selected' : ''}>Grandmother</option>
+                                                <option value="grandfather" ${parent.relationship === 'grandfather' ? 'selected' : ''}>Grandfather</option>
+                                            </select>
+                                        </div>
+                                    `;
+                                    
+                                    parentsFields.appendChild(parentDiv);
+                                    
+                                    // Add event listener to remove button
+                                    parentDiv.querySelector('.remove-parent').addEventListener('click', function() {
+                                        parentDiv.remove();
+                                    });
+                                }
+                            });
+                        }
+
+                    } else {
+                        console.log('No funeral documents found');
+                        coverStatus.textContent = 'Inactive';
+                        coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 mr-3';
+                        coverType.textContent = 'No active cover';
+                        coverPremium.textContent = 'R0';
+                        totalPremium.textContent = 'R0';
+                        coverDate.textContent = 'Not started';
+                        
+                        // Use profile data since no funeral data exists
+                        nameField.value = userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                        idField.value = userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                    }
+                    
+                    // Enable save button
+                    document.getElementById('save-family-text').textContent = 'Save Details';
+                    document.getElementById('save-family-btn').disabled = false;
+                })
+                .catch((error) => {
+                    console.error("Error loading funeral data: ", error);
+                    coverStatus.textContent = 'Error';
+                    coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-200 text-red-800 mr-3';
+                    coverType.textContent = 'Error loading cover';
+                    coverPremium.textContent = 'R0';
+                    totalPremium.textContent = 'R0';
+                    coverDate.textContent = 'Error';
+                    
+                    // Use profile data as fallback
+                    nameField.value = userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                    idField.value = userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                    
+                    // Enable save button
+                    document.getElementById('save-family-text').textContent = 'Save Details';
+                    document.getElementById('save-family-btn').disabled = false;
+                });
+        }
+
+
+        // Function to format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-ZA', {
+                style: 'currency',
+                currency: 'ZAR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Family form submission
         document.getElementById('family-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Family details saved successfully!');
-            document.getElementById('family-modal').classList.add('hidden');
+            
+            const user = auth.currentUser;
+            if (!user) {
+                alert('You need to be logged in to save family details.');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('save-family-text').innerHTML = '<div class="loading-spinner"></div>Saving...';
+            document.getElementById('save-family-btn').disabled = true;
+            
+            // Get main member details
+            const mainMember = {
+                fullName: document.getElementById('main-member-name').value,
+                idNumber: document.getElementById('main-member-id').value,
+                premium: 75 // Default premium for main member
+            };
+            
+            // Get spouse details if exists
+            let spouse = null;
+            if (document.getElementById('has-spouse').checked) {
+                spouse = {
+                    fullName: document.getElementById('spouse-name').value,
+                    idNumber: document.getElementById('spouse-id').value,
+                    premium: 0 // Spouse is included in main member premium
+                };
+            }
+            
+            // Get children details
+            const children = [];
+            const childElements = document.querySelectorAll('#children-fields > div');
+            childElements.forEach(childElement => {
+                const name = childElement.querySelector('.child-name').value;
+                const idNumber = childElement.querySelector('.child-id').value;
+                if (name && idNumber) {
+                    children.push({
+                        fullName: name,
+                        idNumber: idNumber,
+                        premium: 0 // Children are included in main member premium
+                    });
+                }
+            });
+            
+            // Get parents details
+            const extendedMembers = [];
+            const parentElements = document.querySelectorAll('#parents-fields > div');
+            parentElements.forEach(parentElement => {
+                const name = parentElement.querySelector('.parent-name').value;
+                const idNumber = parentElement.querySelector('.parent-id').value;
+                const relationship = parentElement.querySelector('.parent-relationship').value;
+                if (name && idNumber && relationship) {
+                    // Determine premium based on age (this would need actual age calculation)
+                    // For simplicity, we'll assume under 65 for now
+                    extendedMembers.push({
+                        fullName: name,
+                        idNumber: idNumber,
+                        relationship: relationship,
+                        premium: 55 // Default to under 65 premium
+                    });
+                }
+            });
+            
+            // Calculate total premium
+            let totalPremium = mainMember.premium;
+            extendedMembers.forEach(member => {
+                totalPremium += member.premium;
+            });
+            
+            // Prepare funeral data
+            const funeralData = {
+                mainMember: mainMember,
+                spouse: spouse,
+                children: children,
+                extendedMembers: extendedMembers,
+                totalMonthlyPremium: totalPremium,
+                status: 'active',
+                lastUpdated: new Date()
+            };
+            
+            // Check if funeral document already exists
+            db.collection("users").doc(user.uid).collection("funeral")
+                .limit(1)
+                .get()
+                .then((querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        // Update existing document
+                        const funeralDoc = querySnapshot.docs[0];
+                        return funeralDoc.ref.update(funeralData);
+                    } else {
+                        // Create new document
+                        funeralData.declaration = {
+                            submittedAt: new Date(),
+                            agreedToTerms: true
+                        };
+                        return db.collection("users").doc(user.uid).collection("funeral").add(funeralData);
+                    }
+                })
+                .then(() => {
+                    alert('Family details saved successfully!');
+                    document.getElementById('family-modal').classList.add('hidden');
+                    
+                    // Update UI with new data
+                    updateCoverDetails(funeralData);
+                })
+                .catch(error => {
+                    console.error("Error saving family details: ", error);
+                    alert('Error saving family details. Please try again.');
+                })
+                .finally(() => {
+                    // Reset save button
+                    document.getElementById('save-family-text').textContent = 'Save Details';
+                    document.getElementById('save-family-btn').disabled = false;
+                });
         });
+    
+        
+        // Check for active funeral cover when user is logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Load user profile data immediately
+                loadUserProfileData(user.uid).then(() => {
+                    // Then check for funeral cover
+                    checkActiveFuneralCover(user.uid);
+                });
+            } else {
+                console.log("User not logged in");
+                updateUICoverInactive();
+            }
+        });
+    
+        function checkActiveFuneralCover(uid) {
+            // Show loading state
+            document.getElementById('cover-status').textContent = 'Loading...';
+            document.getElementById('cover-type').innerHTML = '<div class="loading-spinner"></div>Loading cover details';
+            
+            db.collection("users").doc(uid).collection("funeral")
+                .where("status", "==", "active")
+                .get()
+                .then((querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        // User has active cover
+                        querySnapshot.forEach((doc) => {
+                            const coverData = doc.data();
+                            updateUICoverActive(coverData);
+                        });
+                    } else {
+                        // No active cover found
+                        updateUICoverInactive();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error checking funeral cover: ", error);
+                    updateUICoverInactive();
+                });
+        }
+    
+        function updateUICoverActive(coverData) {
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverPremium = document.getElementById('cover-premium');
+            const coverDate = document.getElementById('cover-date');
+            const coverDetails = document.getElementById('cover-details');
+            const manageCoverBtn = document.getElementById('manage-cover-btn');
+            const totalPremium = document.getElementById('total-premium');
+            
+            // Update status
+            coverStatus.textContent = 'Active';
+            coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-200 text-green-800 mr-3';
+            
+            // Update type based on plan
+            let coverTypeText = 'Family Funeral Cover';
+            coverType.textContent = coverTypeText;
+            
+            // Update premium and date if available
+            if (coverData.mainMember && coverData.mainMember.premium) {
+                coverPremium.textContent = `R${coverData.mainMember.premium}`;
+            } else {
+                coverPremium.textContent = 'R75';
+            }
+            
+            if (coverData.totalMonthlyPremium) {
+                totalPremium.textContent = `R${coverData.totalMonthlyPremium}`;
+            } else {
+                totalPremium.textContent = 'R75';
+            }
+            
+            if (coverData.declaration && coverData.declaration.submittedAt) {
+                // Convert Firestore timestamp to date
+                const date = coverData.declaration.submittedAt.toDate();
+                coverDate.textContent = date.toLocaleDateString();
+            } else {
+                coverDate.textContent = 'Date not available';
+            }
+            
+            // Show details and update manage button
+            coverDetails.classList.remove('hidden');
+            manageCoverBtn.textContent = 'Manage Active Cover';
+            manageCoverBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            manageCoverBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        }
+    
+        function updateUICoverInactive() {
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverDetails = document.getElementById('cover-details');
+            const manageCoverBtn = document.getElementById('manage-cover-btn');
+            
+            // Set to inactive state
+            coverStatus.textContent = 'Inactive';
+            coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 mr-3';
+            coverType.textContent = 'No active cover';
+            
+            // Hide details and reset manage button
+            coverDetails.classList.add('hidden');
+            manageCoverBtn.textContent = 'Get Cover Now';
+            manageCoverBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            manageCoverBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }
     </script>
 </body>
 </html>

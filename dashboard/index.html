@@ -511,13 +511,26 @@
         }
 
         // Update UI with user data
+        // Update UI with user data
         function updateUserUI(userData) {
             document.getElementById('user-name').textContent = userData.name || 'User';
             document.getElementById('welcome-name').textContent = userData.name ? userData.name.split(' ')[0] : 'Member';
             
+            // Handle joinDate from Firestore (could be Timestamp or Date object)
             if (userData.joinDate) {
-                const joinYear = new Date(userData.joinDate).getFullYear();
-                document.getElementById('member-since').textContent = joinYear;
+                let joinDate;
+                if (userData.joinDate.toDate) { // If it's a Firestore Timestamp
+                    joinDate = userData.joinDate.toDate();
+                } else if (userData.joinDate instanceof Date) { // If it's already a Date
+                    joinDate = userData.joinDate;
+                } else { // If it's a string
+                    joinDate = new Date(userData.joinDate);
+                }
+                
+                // Format as "Month Year" (e.g., "March 2023")
+                const options = { year: 'numeric', month: 'long' };
+                const formattedDate = joinDate.toLocaleDateString('en-US', options);
+                document.getElementById('member-since').textContent = formattedDate;
             }
             
             // Store user data in global variable
@@ -600,104 +613,226 @@
         }
 
         // Load stokvel data
+        // Load stokvel data from Firestore
         function loadStokvelData() {
             showLoading('Loading stokvel data...');
             
-            // In a real app, you would fetch this from Firestore
-            setTimeout(() => {
-                const stokvels = [
-                    {
-                        name: 'Family Savings',
-                        type: 'Monthly',
-                        balance: 3500.00,
-                        nextContribution: '2023-06-15',
-                        status: 'Active'
-                    },
-                    {
-                        name: 'Education Fund',
-                        type: 'Quarterly',
-                        balance: 1750.00,
-                        nextContribution: '2023-06-30',
-                        status: 'Active'
-                    }
-                ];
-
-                const stokvelsBody = document.getElementById('stokvels-body');
-                stokvelsBody.innerHTML = stokvels.map(stokvel => `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium">${stokvel.name}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-gray-500">${stokvel.type}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium">${formatCurrency(stokvel.balance)}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-gray-500">${formatDate(stokvel.nextContribution)}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${stokvel.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-                                ${stokvel.status}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
-
-                // Update total savings and active stokvels
-                const totalSavings = stokvels.reduce((sum, stokvel) => sum + stokvel.balance, 0);
-                document.getElementById('total-savings').textContent = formatCurrency(totalSavings);
-                document.getElementById('active-stokvels').textContent = stokvels.length;
-
-                hideLoading();
-            }, 1000);
-        }
-
-        // Load recent transactions
-        function loadRecentTransactions() {
-            showLoading('Loading transactions...');
+            const userId = auth.currentUser.uid;
+            const userRef = db.collection('users').doc(userId);
             
-            // In a real app, you would fetch this from Firestore
-            setTimeout(() => {
-                const transactions = [
-                    {
-                        description: 'Contribution - Family Savings',
-                        date: '2023-05-15',
-                        amount: 500.00,
-                        type: 'credit'
-                    },
-                    {
-                        description: 'Payout - Education Fund',
-                        date: '2023-05-01',
-                        amount: 1200.00,
-                        type: 'debit'
-                    },
-                    {
-                        description: 'Contribution - Education Fund',
-                        date: '2023-04-15',
-                        amount: 500.00,
-                        type: 'credit'
-                    }
-                ];
-
-                const transactionsContainer = document.getElementById('recent-transactions');
-                transactionsContainer.innerHTML = transactions.map(transaction => `
-                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                            <div class="font-medium">${transaction.description}</div>
-                            <div class="text-sm text-gray-500">${formatDate(transaction.date)}</div>
-                        </div>
-                        <div class="font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-blue-600'}">
-                            ${transaction.type === 'credit' ? '+' : '-'}${formatCurrency(transaction.amount)}
-                        </div>
-                    </div>
-                `).join('');
-
+            // First get the user document to get totalSavings
+            userRef.get().then((userDoc) => {
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    
+                    // Now get the stokvels subcollection
+                    return userRef.collection('stokvels').where('status', '==', 'Active').get()
+                        .then((querySnapshot) => {
+                            const stokvelsBody = document.getElementById('stokvels-body');
+                            
+                            if (querySnapshot.empty) {
+                                stokvelsBody.innerHTML = `
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                            You don't have any active stokvels yet.
+                                        </td>
+                                    </tr>
+                                `;
+                                document.getElementById('active-stokvels').textContent = '0';
+                                document.getElementById('total-savings').textContent = formatCurrency(0);
+                                return userRef.update({ totalSavings: 0 });
+                            }
+                            
+                            let stokvels = [];
+                            let totalBalance = 0;
+                            
+                            querySnapshot.forEach((doc) => {
+                                const stokvel = doc.data();
+                                stokvel.id = doc.id;
+                                stokvels.push(stokvel);
+                                totalBalance += parseFloat(stokvel.balance) || 0;
+                            });
+                            
+                            // Update active stokvels count
+                            document.getElementById('active-stokvels').textContent = stokvels.length;
+                            
+                            // Update total savings display
+                            document.getElementById('total-savings').textContent = formatCurrency(totalBalance);
+                            
+                            // Update the totalSavings field in Firestore
+                            return userRef.update({ totalSavings: totalBalance })
+                                .then(() => {
+                                    // Render stokvels table
+                                    stokvelsBody.innerHTML = stokvels.map(stokvel => `
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="font-medium">${stokvel.name}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-gray-500">${stokvel.type}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="font-medium">${formatCurrency(stokvel.balance)}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-gray-500">${formatDate(stokvel.nextContribution.toDate())}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${stokvel.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                                    ${stokvel.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('');
+                                });
+                        });
+                }
+                return Promise.reject("User document not found");
+            }).catch((error) => {
+                showError('Data Error', 'Failed to load stokvel data. Please refresh the page.');
+                console.error('Error loading stokvel data:', error);
+            }).finally(() => {
                 hideLoading();
-            }, 1500);
+            });
         }
 
+// Update the totalSavings field by summing all active stokvel balances
+function updateTotalSavings(userId) {
+    const userRef = db.collection('users').doc(userId);
+    const stokvelsRef = userRef.collection('stokvels');
+    
+    return stokvelsRef.where('status', '==', 'Active').get()
+        .then((querySnapshot) => {
+            let total = 0;
+            querySnapshot.forEach((doc) => {
+                const stokvel = doc.data();
+                total += parseFloat(stokvel.balance) || 0;
+            });
+            
+            // Update the totalSavings field in the user document
+            return userRef.update({
+                totalSavings: total,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        })
+        .then(() => {
+            console.log('Total savings updated successfully');
+            return total;
+        })
+        .catch((error) => {
+            console.error('Error updating total savings:', error);
+            throw error;
+        });
+}
+
+// Call this function whenever a stokvel balance changes
+// For example, after a new contribution is added:
+function recordContribution(userId, stokvelId, amount) {
+    const stokvelRef = db.collection('users').doc(userId)
+                        .collection('stokvels').doc(stokvelId);
+    
+    // Use Firestore transaction to safely increment the balance
+    db.runTransaction((transaction) => {
+        return transaction.get(stokvelRef).then((doc) => {
+            if (!doc.exists) {
+                throw "Stokvel document does not exist!";
+            }
+            
+            const newBalance = (doc.data().balance || 0) + amount;
+            transaction.update(stokvelRef, { balance: newBalance });
+        });
+    }).then(() => {
+        // After successful contribution, update the total savings
+        updateTotalSavings(userId);
+        
+        // Also record this transaction in a transactions subcollection
+        recordTransaction(userId, stokvelId, amount);
+    }).catch((error) => {
+        showError('Contribution Error', 'Failed to record contribution. Please try again.');
+        console.error('Error recording contribution:', error);
+    });
+}
+
+// Function to record a new transaction
+function recordTransaction(transactionData) {
+    const userId = auth.currentUser.uid;
+    const transactionsRef = db.collection('users').doc(userId)
+                            .collection('transactions');
+    
+    // Add timestamp if not provided
+    if (!transactionData.date) {
+        transactionData.date = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    
+    return transactionsRef.add(transactionData)
+        .then(() => {
+            console.log('Transaction recorded successfully');
+            // Refresh the transactions list
+            loadRecentTransactions();
+        })
+        .catch((error) => {
+            console.error('Error recording transaction:', error);
+            throw error;
+        });
+}
+        // Load recent transactions from Firestore
+function loadRecentTransactions() {
+    showLoading('Loading transactions...');
+    
+    const userId = auth.currentUser.uid;
+    const transactionsRef = db.collection('users').doc(userId)
+                            .collection('transactions')
+                            .orderBy('date', 'desc')
+                            .limit(5); // Get the 5 most recent transactions
+    
+    transactionsRef.get().then((querySnapshot) => {
+        const transactionsContainer = document.getElementById('recent-transactions');
+        
+        if (querySnapshot.empty) {
+            transactionsContainer.innerHTML = `
+                <div class="flex justify-center items-center p-6 bg-gray-50 rounded-lg">
+                    <p class="text-gray-500">No transactions found</p>
+                </div>
+            `;
+            hideLoading();
+            return;
+        }
+        
+        let transactions = [];
+        querySnapshot.forEach((doc) => {
+            const transaction = doc.data();
+            transaction.id = doc.id;
+            
+            // Convert Firestore Timestamp to Date if needed
+            if (transaction.date && transaction.date.toDate) {
+                transaction.date = transaction.date.toDate();
+            }
+            
+            transactions.push(transaction);
+        });
+        
+        // Render transactions
+        transactionsContainer.innerHTML = transactions.map(transaction => `
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div>
+                    <div class="font-medium">${transaction.description || 'Transaction'}</div>
+                    <div class="text-sm text-gray-500">
+                        ${transaction.date ? transaction.date.toLocaleDateString('en-ZA') : 'No date'}
+                    </div>
+                </div>
+                <div class="font-medium ${transaction.type === 'credit' ? 'text-green-600' : 'text-blue-600'}">
+                    ${transaction.type === 'credit' ? '+' : '-'}${formatCurrency(transaction.amount || 0)}
+                </div>
+            </div>
+        `).join('');
+        
+        hideLoading();
+    }).catch((error) => {
+        showError('Transaction Error', 'Failed to load recent transactions. Please try again.');
+        console.error('Error loading transactions:', error);
+        hideLoading();
+    });
+}        
         // Validate contribution amount
         function validateAmount(amount) {
             if (!amount || isNaN(amount)) {
