@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stokvel & Legal Documents</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js"></script>
+    <style>
+        .pdf-container {
+            display: none;
+            height: 80vh;
+            overflow-y: auto;
+            background: #f0f3f7;
+        }
+        #pdf-viewer {
+            width: 100%;
+        }
+        .document-item {
+            transition: all 0.3s ease;
+        }
+        .document-item:hover {
+            transform: translateX(5px);
+        }
+        .back-button {
+            transition: all 0.2s ease;
+        }
+        .back-button:hover {
+            background-color: #1e40af;
+        }
+        .canvas-container {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10 mt-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-800 mb-3">Stokvels & Legal Documents</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Access and view all constitution documents and legal agreements for your stokvel groups.</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Documents List -->
+            <div id="documents-list" class="p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">Available Documents</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="document-item bg-blue-50 rounded-xl p-4 border border-blue-100 cursor-pointer hover:bg-blue-100" onclick="openPdf('Credit Terms', CreditTermsContent)">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-gray-800">Credit Terms</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="document-item bg-green-50 rounded-xl p-4 border border-green-100 cursor-pointer hover:bg-green-100" onclick="openPdf('Funeral Plan', FuneralPlanContent)">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-3 rounded-lg mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-gray-800">Funeral Plan</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="document-item bg-purple-50 rounded-xl p-4 border border-purple-100 cursor-pointer hover:bg-purple-100" onclick="openPdf('Grocery Stokvel', GroceryStokvelContent)">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-gray-800">Grocery Stokvel</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="document-item bg-red-50 rounded-xl p-4 border border-red-100 cursor-pointer hover:bg-red-100" onclick="openPdf('January Stokvel', JanuaryStokvelContent)">
+                        <div class="flex items-center">
+                            <div class="bg-red-100 p-3 rounded-lg mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-gray-800">January Stokvel</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="document-item bg-yellow-50 rounded-xl p-4 border border-yellow-100 cursor-pointer hover:bg-yellow-100" onclick="openPdf('Planning Ahead Stokvel', PlanningAheadStokvelContent)">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-100 p-3 rounded-lg mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-gray-800">Planning Ahead Stokvel</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="document-item bg-indigo-50 rounded-xl p-4 border border-indigo-100 cursor-pointer hover:bg-indigo-100" onclick="openPdf('Power of Attorney', PowerOfAttorneyContent)">
+                        <div class="flex items-center">
+                            <div class="bg-indigo-100 p-3 rounded-lg mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-medium text-gray-800">Power of Attorney</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Viewer -->
+            <div id="pdf-container" class="pdf-container p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <button class="back-button flex items-center text-white bg-blue-600 px-4 py-2 rounded-lg" onclick="closePdf()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to List
+                    </button>
+                    <h2 id="pdf-title" class="text-xl font-semibold text-gray-800"></h2>
+                    <div></div> <!-- Empty div for spacing -->
+                </div>
+                <div id="pdf-viewer" class="border border-gray-200 rounded-lg bg-white p-4"></div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 text-sm mt-8 pb-4">
+            <p>© 2025 VEMA24. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // PDF content as text (from your provided files)
+        const CreditTermsContent = `
+
+ VEMA 24
+
+ CREDIT TERMS AND CONDITIONS
+
+(Issued in terms of Section 93(2) of the National Credit Act No. 34 of 2005)
+
+These Terms and Conditions apply to all loan agreements facilitated by Verna 24 (Pty) Ltd
+("Vema 24", "we", "us"). They must be read together with the Quotation and Payment Schedule
+issued to you. Any reference to "agreement" herein refers to these Terms and Conditions
+together with the Quotation and Payment Schedule. Any reference to "you/your" means the
+applicant stokvel group, its executives, and members.
+
+1. INTRODUCTION
+
+Vema 24 is registered with the National Credit Regulator ("NCR") and abides by the National
+Credit Act, 34 of 2005 ("NCA").
+
+The agreement becomes binding once Verna 24 disburses the approved loan into your Verna
+24 stokvel account. Approval of any loan is at the sole discretion of Verna 24.
+
+The stokvel group warrants that it is the lawful, exclusive, and rightful holder of the Verna 24
+stokvel account(s).
+
+2. QUOTATION AND PAYMENT SCHEDULE
+
+A quotation will be auto-generated and displayed on the Verna 24 platform for review and
+acceptance.
+
+Once accepted, a payment schedule will be issued electronically to the stokvel executives.
+
+3. INTEREST RATE AND FEES
+
+The interest rate is fixed for the duration of the agreement and will not exceed the maximum
+rate permitted under the NCA.
+
+Interest, fees, and charges are calculated upfront and collected according to the agreed
+payment schedule.
+
+If Verna 24 changes any rates, fees, or charges in accordance with the NCA, we will notify the
+stokvel executives at least five (5) business days prior to implementation.
+
+4. REPAYMENT TERMS
+
+Once funds are disbursed into the Verna 24 stokvel account, the stokvel group and all its
+members are jointly responsible for repayment.
+
+You authorise Verna 24 and/or its appointed third-party service providers to raise recurring
+payments against your account(s) for any missed instalments.
+
+Payments due on weekends or public holidays will be processed on the next business day.
+
+5. SESSION
+
+
+You cede, in securitatem debiti, all rights to any savings in your Verna 24 stokvel account(s) as collateral against the loan.
+
+Vema 24 reserves the right to apply or transfer such collateral as security until the loan is fully repaid.
+
+This cession remains in force until all obligations under the loan agreement are discharged.
+
+6. INSURANCE
+
+Where applicable, a credit life policy may be arranged on your behalf through an authorised third-party provider.
+
+You may elect to use the proposed policy or substitute it with your own.
+
+The policy may cover death, permanent disability, temporary disability, or loss of income as per the insurer's terms.
+
+Premiums will be recovered as part of your repayment schedule.
+
+7. STATEMENTS
+
+Loan repayment schedules will be incorporated into your Verna 24 account statements, which are available online.
+
+Failure to receive a statement does not release you from repayment obligations.
+
+8. TERMINATION
+
+You may terminate this agreement by closing your Verna 24 account, provided all outstanding amounts are settled immediately from your account balance.
+
+9. DEFAULT
+
+Failure to comply with this agreement entitles Verna 24 to claim the full outstanding balance, including principal, interest, and fees.
+
+10. JURISDICTION
+
+In terms of Section 45 of the Magistrates' Court Act, you consent to Verna 24 instituting legal proceedings in the Magistrates' Court, notwithstanding that Verna 24 may choose any court of competent jurisdiction.
+
+11. LEGAL COSTS
+
+You will be liable for all legal costs incurred by Verna 24 in enforcing this agreement, on an attorney-and-client scale, unless a court orders otherwise.
+
+12. CERTIFICATE OF BALANCE
+
+A certificate issued by a duly authorised manager of Verna 24, or your latest account statement, will serve as prima facie proof of the amount due.
+
+13. WHOLE AGREEMENT
+
+
+This agreement must be read in conjunction with Verna 24's platform terms of use and Privacy Policy. No unwritten terms shall apply.
+
+14. YOUR RIGHTS
+
+You may lodge complaints directly with Verna 24 via support@verna24.co.za or by contacting our customer support line.
+
+If unresolved, you may escalate complaints to the National Credit Regulator (NCR) or the National Consumer Tribunal (NCT).
+
+NCR: Tel 0860 627 627 | Email: complaints@ncr.org.za | Website: www.ncr.org.za
+
+Tribunal: www.thenct.org.za
+
+ These terms are binding upon acceptance of your loan quotation and form part of the loan agreement between you and Verna 24.`;
+
+        const FuneralPlanContent = `
+
+ Vema24 Funeral Plan Constitution
+
+ 1. NAME
+The name of the scheme shall be Vema24 Funeral Plan.
+
+ 2. ADMINISTRATION
+The Funeral Plan is administered by Akanani Funeral Assist, a community-based savings and funeral benefit initiative.
+
+ 3. PURPOSE
+To provide fixed cash funeral benefits to the nominated beneficiary or policyholder in the event of death, subject to the terms outlined herein.
+
+ 4. DEFINITIONS
+Policyholder: The primary insured member, aged 18 to 72 years.
+Spouse: A legally recognized or life partner residing with the Policyholder for more than 6 months.
+Children: Up to five (5) unmarried children under 18 years of age.
+Parents: Up to four (4) biological, legal, or step-parents of the Policyholder or Spouse, not older than 74 years.
+Extended Family: Uncles, aunts, cousins, nieces, nephews, or any legally recognised family members nominated by the Policyholder.
+Nominated Beneficiary: A person nominated to receive the funeral benefit upon the Policyholder's death.
+Premium: Monthly amount payable in advance.
+Grace Period: 20 days after non-payment notice.
+Waiting Period: The time before claims become payable.
+VAS: Value-added services offered with the plan.
+
+ 5. ELIGIBILITY
+Any South African permanent resident or valid permit holder aged 18 to 72 may join.
+
+ 6. MEMBERSHIP COVER
+The Funeral Plan may cover:
+- The Policyholder
+- One Spouse
+- Up to five (5) children
+- Up to four (4) parents
+- Extended family members, such as uncles, aunts, cousins, etc., nominated by the Policyholder and reflected in the Schedule
+
+ 7. PREMIUM PAYMENT
+- Premiums are payable monthly in advance.
+
+
+Vema24 Funeral Plan Constitution
+
+- If a premium is unpaid, a 20-day Grace Period applies.
+- Non-payment for 2 consecutive months results in the reduced Protector Benefit.
+- The Plan can be reinstated within 2 months, but new waiting periods may apply.
+
+8. COVER AMOUNTS
+
+Fixed cash benefits are paid upon the death of a covered member, as specified in the Plan Schedule.
+
+9. WAITING PERIODS
+
+- Accidental death: No waiting period.
+- Natural causes: 6 months with 6 paid premiums.
+- Suicide: 12 months with 12 paid premiums.
+- Waiting periods may be waived if transitioning from another funeral policy.
+
+10. EXCLUSIONS
+
+No benefit shall be payable if death results from:
+- Substance or alcohol abuse
+- War, protest, or public disorder
+- Criminal activities
+- Nuclear or biological exposure
+- Fraud or intentional misrepresentation
+
+11. CLAIM PROCEDURE
+
+- Claims must be lodged within 3 months of death.
+- Full documentation and a claim form are required.
+- Claims are paid within 24 hours of approval (excluding weekends/public holidays).
+- Claims will not be processed if premiums are in arrears or waiting periods apply.
+
+12. BENEFICIARY PAYOUTS
+
+- For family members: The Policyholder is the beneficiary.
+- For Policyholder's death: Payout is made to the nominated beneficiary or surviving spouse.
+- If no valid beneficiary is nominated: Payout will follow succession law.
+
+13. CANCELLATION POLICY
+
+- Members may cancel within 31 days for a full refund (cooling-off period).
+- After 31 days, no refund.
+- Akanani Funeral Assist may cancel the policy with 31 days' written notice.
+
+Vema24 Funeral Plan Constitution
+
+14. ANNUAL INCREASE
+- Premiums may increase annually by up to 10%.
+- Cover amount may increase proportionally.
+- Notice will be given at least 31 days prior.
+
+15. OPTIONAL BENEFITS
+- Increased accidental death cover
+- Cover for up to 4 parents
+- Extended family cover
+- Family extender benefit (3-month cover after Policyholder's death)
+- Airtime voucher to assist with funeral arrangements
+
+16. TREATING CUSTOMERS FAIRLY (TCF)
+Our Society adheres to the TCF (Treating Customers Fairly) principles:
+- Transparency, fairness, and access to information
+- Suitability of product and services
+- No post-sale barriers
+
+17. COMPLAINTS PROCEDURE
+Complaints must be submitted in writing within 30 days to:
+complaints@vema24.co.za
+
+18. PRIVACY & DATA PROTECTION
+Akanani Funeral Assist and Vema24 will handle personal information in accordance with the POPI Act, ensuring privacy and security. Personal information will be destroyed upon request and stored for a minimum of 5 years as per FAIS regulations.`;
+
+        const GroceryStokvelContent = `
+
+ GROCERY STOKVEL
+
+ Constitution
+
+Adopted on: 01 January 2025
+
+1. Name
+
+The name of the group shall be Grocery Stokvel (the " Stokvel " ).
+
+2. Purpose
+
+The purpose of the Stokvel is to provide a structured savings platform that enables Members to save consistently from January to October, so as to ease financial pressures and provide groceries for their households at the end of the year. The Stokvel operates on the principles of unity, transparency, accountability, and mutual benefit.
+
+3. Membership
+
+3.1 Membership is open to any person aged eighteen (18) years or older.
+3.2 A Member may hold more than one grocery savings plan.
+3.3 Upon admission, each Member shall be assigned a unique membership number.
+3.4 Members must provide: Full Name, Identity or Passport Number, Phone Number and Email, Beneficiary details.
+3.5 All personal information shall be managed in compliance with the Protection of Personal Information Act (POPIA).
+
+4. Savings Contributions
+
+4.1 Contributions shall be made monthly from January to October by debit order, EFT, or direct cash deposit into the Grocery Stokvel Account.
+4.2 All contributions are compulsory in accordance with the Member ' s chosen grocery savings plan.
+4.3 Members who fail to make contributions may forfeit grocery benefits as determined by the Governing Body.
+
+5. Rewards
+
+5.1 A grocery benefit (bonus) shall be paid out at the end of October to all qualifying Members.
+5.2 A Member who misses two (2) or more contributions during the year shall not qualify for the grocery benefit.
+5.3 Only Members who have made full contributions will receive the bonus grocery benefit.
+
+6. Code of Conduct
+
+6.1 Members shall not use the name of the Stokvel for personal or business gain.
+6.2 Members must behave respectfully and courteously across all communication platforms.
+6.3 Any breach of this Constitution may result in termination of membership. Savings owed to a terminated Member shall only be paid at the conclusion of the savings cycle (October).
+
+
+7. Management and Administration
+
+The Stokvel shall be managed by a Governing Body consisting of:
+
+-  Compliance Officer (Chairperson)
+
+-  Portfolio Manager (Treasurer)
+
+-  Secretary
+
+7.1 The Governing Body shall be elected by the Members and serve renewable terms of one (1) year.
+
+8. Signing Powers
+
+8.1 Any decision of the Governing Body shall be approved by written authorisation of any two (2) Governing
+Body members.
+8.2 The Governing Body may authorise signing powers in respect of the Accounts to any Member or Third-Party
+Service Provider.
+
+9. Communication
+
+9.1 The Stokvel shall not hold physical meetings. All official communications shall be made via WhatsApp,
+Facebook, the Stokvel website, email, and/or SMS.
+9.2 The Governing Body shall ensure timely updates and transparency of all Stokvel activities.
+
+10. Funds and Investments
+
+10.1 All funds shall be held in the Grocery Stokvel Account.
+10.2 The Stokvel may invest in businesses under its direct control, with the aim of growing Members ' savings
+and generating additional grocery benefits.
+
+11. Death of a Member
+
+11.1 In the event of a Member ' s death, all monies due shall be paid to the deceased Member ' s estate in
+accordance with South African law.
+11.2 Payments shall not be made directly to family members except through lawful estate administration
+processes.
+
+12. Withdrawal of Membership
+
+12.1 A Member may withdraw from the Stokvel at any time; however, contributions and savings shall only be
+paid out at the conclusion of the savings cycle (October).
+12.2 The withdrawal value shall be based on the total contributions made.
+
+
+13. Dissolution
+
+13.1 Should the Stokvel be dissolved, all funds and assets shall be distributed equitably among active Members.
+13.2 Any liabilities of the Stokvel shall be borne proportionately by Members in accordance with their
+contributions.
+13.3 Upon dissolution, the Grocery Stokvel Account shall be closed.
+
+14. Winding-Up or Restructuring
+
+14.1 In the event that the Grocery Stokvel has to be wound-up or restructured, which results in a move away from
+the stokvel model, the Governing Body shall be authorised to effect such changes on behalf of the Members,
+provided that such changes continue to fulfil the purpose of the Stokvel and are in the best interests of the
+Members.
+
+15. Adoption
+
+This Constitution of the Grocery Stokvel was formally adopted on: 01 January 2025.`;
+
+        const JanuaryStokvelContent = `
+
+ January Stokvel Constitution
+
+1. Name
+
+The name of the group shall be January Stokvel (the "Stokvel").
+
+2. Purpose
+
+The purpose of the Stokvel is to provide a structured savings platform that enables Members to
+save consistently from February to November, so as to ease financial pressures in January. The
+Stokvel operates on the principles of unity, transparency, accountability, and mutual benefit.
+
+3. Membership
+
+3.1 Membership is open to any person aged eighteen (18) years or older.
+3.2 A Member may hold more than one savings plan.
+3.3 Upon admission, each Member shall be assigned a unique membership number.
+3.4 Members must provide:
+
+-  Full Name
+
+-  Identity or Passport Number
+
+-  Phone Number and Email
+
+-  Beneficiary details (the person to whom funds shall be transferred in the event of death)
+3.5 All personal information shall be managed in compliance with the Protection of Personal
+Information Act (POPIA).
+
+4. Savings Contributions**
+
+4.1 Members may elect a lock-in period of either ten (10) months or twenty-four (24) months.
+4.2 Contributions shall be made monthly by debit order, electronic funds transfer (EFT), or direct
+cash deposit into the January Stokvel Account.
+4.3 All contributions are compulsory in accordance with the Member's selected savings plan.
+
+5. Rewards
+
+5.1 A bonus shall be paid in January to all qualifying Members.
+5.2 A Member who misses two (2) or more contributions in a year shall not qualify for the bonus.
+5.3 Full contributions are required to receive the bonus.
+
+6. Code of Conduct
+
+6.1 Members shall not use the name of the Stokvel for personal or business gain.
+6.2 Members must behave respectfully and courteously across all communication platforms
+(including WhatsApp, Facebook, and any other digital platforms).
+6.3 Any breach of this Constitution may result in termination of membership. Savings owed to a
+terminated Member shall only be paid at the conclusion of their savings period.
+
+
+7. Management and Administration**
+
+The Stokvel shall be managed by a Governing Body consisting of:
+
+-  Compliance Officer (Chairman)
+
+-  Provides overall leadership.
+
+-  Ensures compliance with law and this Constitution.
+
+-  Approves and supervises investments.
+
+-  Oversees business development.
+
+-  Portfolio Manager (Treasurer)
+
+-  Manages contributions and reward payments.
+
+-  Keeps accurate financial records.
+
+-  Prepares reports for Members.
+
+-  Secretary
+
+-  Records resolutions and communications.
+
+-  Maintains membership records.
+
+-  Circulates notices and ensures transparent administration.
+
+7.1 The Governing Body shall be elected by the Members and serve renewable terms of one (1)
+year.
+
+8. Signing Powers
+
+8.1 Any decision of the Governing Body shall be approved by written authorisation of any two (2)
+Governing Body members.
+8.2 The Governing Body shall be entitled to authorise any signing powers in respect of the
+Accounts to any Member tasked with administrative duties and/or any Third-Party Service
+Provider.
+
+9. Communication**
+
+9.1 The Stokvel shall not hold physical meetings. All official communications shall be made via
+Facebook, LinkedIn, the Stokvel website, email, WhatsApp, and/or SMS.
+9.2 The Governing Body shall ensure timely updates and transparency of all Stokvel activities.
+
+10. Funds and Investments
+
+10.1 All funds shall be held in the January Stokvel Account.
+10.2 The Stokvel may invest in businesses under its direct control, with the aim of growing
+Members' savings and generating rewards.
+
+11. Death of a Member
+
+11.1 In the event of a Member's death, all monies due shall be paid to the deceased Member's
+estate in accordance with South African law.
+11.2 Payments shall not be made directly to family members except through lawful estate
+administration processes.
+
+
+12. Withdrawal of Membership
+
+12.1 A Member may withdraw from the Stokvel at any time; however, contributions and savings
+shall only be paid out at the conclusion of the Member's lock-in period (10 or 24 months).
+12.2 The withdrawal value shall be based on the total contributions made.
+
+13. Dissolution
+
+13.1 Should the Stokvel be dissolved, all funds and assets shall be distributed equitably among
+active Members.
+13.2 Any liabilities of the Stokvel shall be borne proportionately by Members in accordance with
+their contributions.
+13.3 Upon dissolution, the January Stokvel Account shall be closed.
+
+14. Winding-Up or Restructuring
+
+14.1 In the event that the January Stokvel has to be wound-up or restructured, which results in a
+move away from the stokvel model, the Governing Body shall be authorised to effect any such
+changes on behalf of the Members, provided that such changes continue to fulfil the purpose of
+the Stokvel and are in the best interests of the Members.
+
+15. Adoption
+
+This Constitution was formally adopted on: 01 January 2025.`;
+
+        const PlanningAheadStokvelContent = `
+
+ Planning Ahead Stokvel Constitution
+
+ 1. Name
+The name of the group shall be Planning Ahead Stokvel (the "Stokvel").
+
+ 2. Purpose
+The purpose of the Stokvel is to provide a structured savings platform that allows Members to:
+
+- Join at any time during the year.
+
+- Save consistently for financial security.
+
+- Withdraw savings after a minimum saving period of ten (10) months.
+
+- Promote financial discipline, unity, transparency, accountability, and mutual benefit.
+
+ 3. Membership
+3.1 Membership is open to any person aged eighteen (18) years or older.
+3.2 A Member may hold more than one savings plan.
+3.3 Upon admission, each Member shall be assigned a unique membership number.
+3.4 Members must provide:
+
+- Full Name
+
+- Identity or Passport Number
+
+- Phone Number and Email
+
+- Beneficiary details (the person to whom funds shall be transferred in the event of death)
+3.5 All personal information shall be managed in compliance with the Protection of Personal Information Act (POPIA).
+
+ 4. Savings Contributions
+4.1 Members may join at any time and select their contribution amount.
+4.2 Contributions shall be made monthly by debit order, electronic funds transfer (EFT), or direct cash deposit into the Planning Ahead Stokvel Account.
+4.3 All contributions are compulsory in accordance with the Member's chosen savings plan.
+
+ 5. Withdrawals
+5.1 Members may withdraw their savings after a minimum of ten (10) months of contributions.
+5.2 Early withdrawals (before ten months) are not permitted.
+5.3 The withdrawal value shall be based solely on the Member's total contributions made.
+5.4 Members who fail to contribute regularly may forfeit eligibility for any agreed benefits.
+
+ 6. Code of Conduct
+6.1 Members shall not use the name of the Stokvel for personal or business gain.
+6.2 Members must behave respectfully and courteously across all communication platforms (including WhatsApp,
+
+
+Facebook, and any other digital platforms).
+6.3 Any breach of this Constitution may result in termination of membership. Savings owed to a terminated Member shall only be paid after the ten (10) month minimum saving period.
+
+7. Management and Administration
+The Stokvel shall be managed by a Governing Body consisting of:
+
+• Compliance Officer (Chairman)
+- Provides overall leadership.
+- Ensures compliance with law and this Constitution.
+- Approves and supervises investments.
+- Oversees business development.
+
+• Portfolio Manager (Treasurer)
+- Manages contributions and withdrawal payments.
+- Keeps accurate financial records.
+- Prepares reports for Members.
+
+• Secretary
+- Records resolutions and communications.
+- Maintains membership records.
+- Circulates notices and ensures transparent administration.
+
+7.1 The Governing Body shall be elected by the Members and serve renewable terms of one (1) year.
+
+8. Signing Powers
+8.1 Any decision of the Governing Body shall be approved by written authorisation of any two (2) Governing Body members.
+8.2 The Governing Body shall be entitled to authorise any signing powers in respect of the Accounts to any Member tasked with administrative duties and/or any Third-Party Service Provider.
+
+9. Communication
+9.1 The Stokvel shall not hold physical meetings. All official communications shall be made via Facebook, LinkedIn, the Stokvel website, email, WhatsApp, and/or SMS.
+9.2 The Governing Body shall ensure timely updates and transparency of all Stokvel activities.
+
+10. Funds and Investments
+10.1 All funds shall be held in the Planning Ahead Stokvel Account.
+10.2 The Stokvel may invest in businesses under its direct control, with the aim of protecting Members' savings and generating value.
+
+11. Death of a Member
+
+
+11.1 In the event of a Member's death, all monies due shall be paid to the deceased Member's estate in accordance with South African law.
+
+11.2 Payments shall not be made directly to family members except through lawful estate administration processes.
+
+12. Withdrawal of Membership
+
+12.1 A Member may resign from the Stokvel at any time.
+
+12.2 Contributions and savings shall only be paid out once the Member has completed at least ten (10) months of saving.
+
+12.3 The withdrawal value shall be based on the total contributions made.
+
+13. Dissolution
+
+13.1 Should the Stokvel be dissolved, all funds and assets shall be distributed equitably among active Members.
+
+13.2 Any liabilities of the Stokvel shall be borne proportionately by Members in accordance with their contributions.
+
+13.3 Upon dissolution, the Planning Ahead Stokvel Account shall be closed.
+
+14. Winding-Up or Restructuring
+
+14.1 In the event that the Planning Ahead Stokvel has to be wound-up or restructured, which results in a move away from the stokvel model, the Governing Body shall be authorised to effect any such changes on behalf of the Members, provided that such changes continue to fulfil the purpose of the Stokvel and are in the best interests of the Members.
+
+15. Adoption
+
+This Constitution was formally adopted on: 01 January 2025.`;
+
+        const PowerOfAttorneyContent = `
+
+  VEMA 24
+
+ POWER OF ATTORNEY & CONSENT
+
+By applying for any and/or all loans through Vema 24, you hereby expressly nominate,
+constitute, and appoint Vema 24 (Pty) Ltd, together with any of its authorised employees,
+officers, or agents, as your true and lawful attorney-in-fact and agent, with full power of
+substitution and resubstitution, for you and in your name, place, and stead, in any and all
+capacities, to:
+
+1. Initiate Debit Orders: Initiate and process recurring debit orders against your designated
+bank account(s) for the purpose of collecting loan repayments, interest, fees, and any other
+amounts due in terms of any loan agreement entered into with Vema 24.
+
+2. Access Stokvel Account(s): Access, manage, and/or debit your Vema 24 stokvel account(s)
+to set off any outstanding amounts owed to Vema 24, including but not limited to principal,
+interest, fees, and charges.
+
+3. Cession of Savings: Give effect to the cession of your rights, title, and interest in and to any
+and all savings held in your Vema 24 stokvel account(s) as security for any loan advanced by
+Vema 24.
+
+4. Sign Documents: Execute and deliver any and all documents, certificates, instruments, and
+notices that Vema 24 may deem necessary or advisable in connection with the management
+and/or recovery of any loan, including but not limited to certificates of balance, cession
+agreements, and settlement notices.
+
+5. Communicate with Third Parties: Communicate with any bank, financial institution, or third-
+party payment processor to verify, process, or collect any amounts due.
+
+6. **Perform All Necessary Acts: Perform any and all acts and things whatsoever requisite,**
+necessary, or appropriate to be done in connection with the repayment and/or recovery of any
+loan, as fully to all intents and purposes as you might or could do in person.
+
+  GENERAL PROVISIONS
+
+-  This Power of Attorney is coupled with an interest and is irrevocable until all amounts owed to
+Vema 24 are paid in full.
+
+-  This Power of Attorney shall remain in full force and effect notwithstanding any disability,
+incapacity, or dissolution of the stokvel group, its executives, or members.
+
+-  A certificate signed by any manager of Vema 24 shall be conclusive proof of the amount due
+and owing at any time.
+
+-  This Power of Attorney shall be governed by the laws of the Republic of South Africa.
+
+
+  DECLARATION AND CONSENT
+
+By accepting any loan from Vema 24, I/we hereby:
+
+-  Acknowledge that I/we have read and understood this Power of Attorney and Consent.
+
+-  Authorise Vema 24 to act as my/our attorney-in-fact in accordance with the powers set out
+above.
+
+-  Confirm that Vema 24 may exercise these powers without further notice to or consent from
+me/us.
+
+-  Agree to indemnify and hold harmless Vema 24 from any claims, losses, or damages arising
+from the lawful exercise of these powers.
+
+-  Consent to the jurisdiction of the Magistrate's Court in terms of Section 45 of the Magistrates'
+Court Act, notwithstanding Vema 24's right to proceed in any other court of competent
+jurisdiction.
+
+  Date of Effect: This Power of Attorney and Consent shall take effect from the date of
+acceptance of any loan quotation and shall remain in force until all obligations to Vema 24 are
+fully discharged.
+
+  ACCEPTED AND AGREED:
+
+  For and on behalf of the Stokvel Group:
+
+Full Name of Stokvel: ..........................................................................
+
+Name of Authorised Representative: ..........................................................................
+
+Signature: ..........................................................................
+
+Date: ..........................................................................
+
+  WITNESSES:
+
+1. Name: ..........................................................................
+
+Signature: ..........................................................................
+
+Date: ..........................................................................
+
+2. Name: ..........................................................................
+
+Signature: ..........................................................................
+
+Date: ..........................................................................`;
+
+        // Set up PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+
+        // Function to open PDF
+        function openPdf(title, content) {
+            // Update UI
+            document.getElementById('documents-list').style.display = 'none';
+            document.getElementById('pdf-container').style.display = 'block';
+            document.getElementById('pdf-title').textContent = title;
+            
+            // Show loading state
+            const viewer = document.getElementById('pdf-viewer');
+            viewer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            `;
+            
+            // Create a simple text-based PDF viewer
+            setTimeout(() => {
+                renderTextContent(title, content, viewer);
+            }, 500);
+        }
+
+        // Function to render text content
+        function renderTextContent(title, content, container) {
+            container.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-2xl font-bold text-center mb-6 text-indigo-800">${title}</h2>
+                    <div class="pdf-content text-gray-700 leading-relaxed whitespace-pre-line">${content}</div>
+                </div>
+            `;
+        }
+
+        // Function to close PDF and return to list
+        function closePdf() {
+            document.getElementById('pdf-container').style.display = 'none';
+            document.getElementById('documents-list').style.display = 'block';
+        }
+
+        // Add event listeners for better mobile experience
+        document.addEventListener('DOMContentLoaded', function() {
+            const documentItems = document.querySelectorAll('.document-item');
+            documentItems.forEach(item => {
+                item.addEventListener('touchend', function(e) {
+                    if (!e.target.closest('button')) {
+                        const onclick = item.getAttribute('onclick');
+                        if (onclick) {
+                            eval(onclick);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

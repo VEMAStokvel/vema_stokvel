@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Funeral Policy Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        /* Include only funeral-specific styles here */
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .status-dropdown {
+            position: absolute;
+            right: 0;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            min-width: 140px;
+        }
+        .status-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .status-option:hover {
+            background-color: #f3f4f6;
+        }
+        .view-policy-details {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .view-policy-details:last-child {
+            border-bottom: none;
+        }
+        .document-link {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-blue-800 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-users fa-2x"></i>
+                    <h1 class="text-2xl font-bold">Stokvel Admin Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="admin-users.html" class="bg-blue-700 text-white px-4 py-2 rounded">User Management</a>
+                    <a href="admin-stokvels.html" class="bg-blue-700 text-white px-4 py-2 rounded">Stokvel Management</a>
+                    <a href="admin-loans.html" class="bg-blue-700 text-white px-4 py-2 rounded">Loan Management</a>
+                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
+                <div class="loading-spinner"></div>
+                <p id="loading-text">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 hidden">
+            <strong class="font-bold" id="error-title">Error!</strong>
+            <span class="block sm:inline" id="error-details">Something went wrong.</span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <i class="fas fa-times cursor-pointer" onclick="document.getElementById('error-message').classList.add('hidden')"></i>
+            </span>
+        </div>
+
+        <!-- Funeral Policies Section -->
+        <section id="funerals-section" class="dashboard-section active">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Funeral Policy Management</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-blue-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-blue-800 font-semibold">Total Policies</p>
+                                <p id="total-policies" class="text-3xl font-bold text-blue-800">0</p>
+                            </div>
+                            <i class="fas fa-monument text-blue-800 text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-green-800 font-semibold">Active Policies</p>
+                                <p id="active-policies" class="text-3xl font-bold text-green-800">0</p>
+                            </div>
+                            <i class="fas fa-check-circle text-green-800 text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-purple-800 font-semibold">Total Premium</p>
+                                <p id="total-premium" class="text-3xl font-bold text-purple-800">R0</p>
+                            </div>
+                            <i class="fas fa-money-bill-wave text-purple-800 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy Holder</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cover Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Premium</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="funerals-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Funeral policies will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- View Funeral Policy Modal -->
+    <div id="view-funeral-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-2/3 max-h-screen overflow-y-auto">
+            <div class="border-b px-4 py-2 flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Funeral Policy Details</h3>
+                <button id="close-view-funeral-modal" class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4" id="funeral-policy-details">
+                <!-- Policy details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // DOM elements
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const loadingText = document.getElementById('loading-text');
+        const errorMessage = document.getElementById('error-message');
+        const errorTitle = document.getElementById('error-title');
+        const errorDetails = document.getElementById('error-details');
+        
+        // DOM elements for viewing funeral policy
+        const viewFuneralModal = document.getElementById('view-funeral-modal');
+        const closeViewFuneralModal = document.getElementById('close-view-funeral-modal');
+        const funeralPolicyDetails = document.getElementById('funeral-policy-details');
+        
+        // Show/hide functions
+        function showLoading(message = 'Loading...') {
+            loadingText.textContent = message;
+            loadingIndicator.classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            loadingIndicator.classList.add('hidden');
+        }
+        
+        function showError(title, details) {
+            errorTitle.textContent = title;
+            errorDetails.textContent = details;
+            errorMessage.classList.remove('hidden');
+        }
+        
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return 'R' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+        
+        // Format date
+        function formatDate(date) {
+            if (!date) return 'N/A';
+            
+            if (date.toDate) {
+                date = date.toDate();
+            }
+            
+            return new Intl.DateTimeFormat('en-ZA', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(date);
+        }
+        
+        // Load funerals data
+        function loadFuneralsData() {
+            showLoading('Loading funeral policies...');
+            
+            // Get all users and their funeral policies
+            db.collection('users').get().then((usersSnapshot) => {
+                const funeralsTableBody = document.getElementById('funerals-table-body');
+                
+                if (usersSnapshot.empty) {
+                    funeralsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                No funeral policies found.
+                            </td>
+                        </tr>
+                    `;
+                    hideLoading();
+                    return;
+                }
+                
+                let funerals = [];
+                let totalPolicies = 0;
+                let activePolicies = 0;
+                let totalPremium = 0;
+                
+                // Process each user's funeral policies
+                const userPromises = [];
+                usersSnapshot.forEach((userDoc) => {
+                    const userData = userDoc.data();
+                    const promise = db.collection('users').doc(userDoc.id).collection('funeral').get()
+                        .then((funeralsSnapshot) => {
+                            funeralsSnapshot.forEach((funeralDoc) => {
+                                const funeral = funeralDoc.data();
+                                funeral.id = funeralDoc.id;
+                                funeral.userId = userDoc.id;
+                                funeral.userName = userData.fullName || userData.name || userData.email;
+                                funeral.userEmail = userData.email; // Store user email
+                                funerals.push(funeral);
+                                
+                                totalPolicies++;
+                                if (funeral.status === 'Active') activePolicies++;
+                                totalPremium += parseFloat(funeral.totalMonthlyPremium) || 0;
+                            });
+                        });
+                    userPromises.push(promise);
+                });
+                
+                // Wait for all funeral policies to be loaded
+                Promise.all(userPromises).then(() => {
+                    // Update summary cards
+                    document.getElementById('total-policies').textContent = totalPolicies;
+                    document.getElementById('active-policies').textContent = activePolicies;
+                    document.getElementById('total-premium').textContent = formatCurrency(totalPremium);
+                    
+                    if (funerals.length === 0) {
+                        funeralsTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    No funeral policies found.
+                                </td>
+                            </tr>
+                        `;
+                        hideLoading();
+                        return;
+                    }
+                    
+                    // Render funerals table
+                    let funeralsHtml = '';
+                    funerals.forEach((funeral) => {
+                        funeralsHtml += `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium">${funeral.userName}</div>
+                                    <div class="text-sm text-gray-500">${funeral.userEmail || 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-gray-500">${funeral.coverType || 'Family Cover'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium">${formatCurrency(funeral.totalMonthlyPremium || 0)}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-gray-500">${funeral.startDate ? formatDate(funeral.startDate) : 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${funeral.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                        ${funeral.status || 'N/A'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="relative inline-block text-left">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-2 view-funeral" data-user-id="${funeral.userId}" data-id="${funeral.id}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="text-green-600 hover:text-green-900 edit-funeral" data-user-id="${funeral.userId}" data-id="${funeral.id}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <div class="status-dropdown absolute hidden right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                            <div class="status-option" data-status="pending" data-user-id="${funeral.userId}" data-id="${funeral.id}">
+                                                <i class="fas fa-clock text-yellow-500"></i> Mark as Pending
+                                            </div>
+                                            <div class="status-option" data-status="active" data-user-id="${funeral.userId}" data-id="${funeral.id}">
+                                                <i class="fas fa-check-circle text-green-500"></i> Mark as Active
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    funeralsTableBody.innerHTML = funeralsHtml;
+                    
+                    // Add event listeners for the view and status dropdown
+                    setupFuneralViewButtons();
+                    setupFuneralStatusDropdowns();
+                    
+                    hideLoading();
+                });
+            }).catch((error) => {
+                showError('Data Error', 'Failed to load funeral policies. Please refresh the page.');
+                console.error('Error loading funeral policies:', error);
+                hideLoading();
+            });
+        }
+        
+        // Setup funeral view button functionality
+        function setupFuneralViewButtons() {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('view-funeral') || 
+                    (e.target.parentElement && e.target.parentElement.classList.contains('view-funeral'))) {
+                    
+                    const button = e.target.classList.contains('view-funeral') ? e.target : e.target.parentElement;
+                    const userId = button.getAttribute('data-user-id');
+                    const funeralId = button.getAttribute('data-id');
+                    
+                    // Fetch and display the funeral policy details
+                    viewFuneralPolicy(userId, funeralId);
+                }
+            });
+        }
+        
+        // Function to view funeral policy details
+        function viewFuneralPolicy(userId, funeralId) {
+            showLoading('Loading policy details...');
+            
+            db.collection('users').doc(userId).collection('funeral').doc(funeralId).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const policy = doc.data();
+                        populateFuneralPolicyModal(policy);
+                        viewFuneralModal.classList.remove('hidden');
+                        hideLoading();
+                    } else {
+                        hideLoading();
+                        showError('Error', 'Funeral policy not found.');
+                    }
+                })
+                .catch((error) => {
+                    hideLoading();
+                    showError('Data Error', 'Failed to load policy details.');
+                    console.error('Error loading policy:', error);
+                });
+        }
+        
+        // Function to populate the funeral policy modal with data
+        function populateFuneralPolicyModal(policy) {
+            let html = `
+                <div class="view-policy-details">
+                    <h4 class="font-bold text-lg mb-2">Main Member Details</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-semibold">Full Name</p>
+                            <p>${policy.mainMember.fullName || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">ID Number</p>
+                            <p>${policy.mainMember.idNumber || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Phone Number</p>
+                            <p>${policy.mainMember.phoneNumber || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Email</p>
+                            <p>${policy.mainMember.email || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Address</p>
+                            <p>${policy.mainMember.address || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Premium</p>
+                            <p>${formatCurrency(policy.mainMember.premium || 0)}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">ID Document</p>
+                            <p>${policy.mainMember.idDocumentUrl ? 
+                                `<a href="${policy.mainMember.idDocumentUrl}" target="_blank" class="document-link">View Document</a>` : 
+                                'No document uploaded'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add extended members if they exist
+            if (policy.extendedMembers && policy.extendedMembers.length > 0) {
+                html += `<div class="view-policy-details">
+                    <h4 class="font-bold text-lg mb-2">Extended Members</h4>`;
+                
+                policy.extendedMembers.forEach((member, index) => {
+                    html += `
+                        <div class="mb-4 p-3 bg-gray-50 rounded">
+                            <h5 class="font-semibold mb-2">Member ${index + 1}</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="font-semibold">Name</p>
+                                    <p>${member.name || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">ID Number</p>
+                                    <p>${member.idNumber || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Age</p>
+                                    <p>${member.age || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Relationship</p>
+                                    <p>${member.relationship || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Premium</p>
+                                    <p>${formatCurrency(member.premium || 0)}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">ID Document</p>
+                                    <p>${member.idDocumentUrl ? 
+                                        `<a href="${member.idDocumentUrl}" target="_blank" class="document-link">View Document</a>` : 
+                                        'No document uploaded'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            // Add declaration information
+            html += `
+                <div class="view-policy-details">
+                    <h4 class="font-bold text-lg mb-2">Declaration</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-semibold">Agreed to Terms</p>
+                            <p>${policy.declaration.agreed ? 'Yes' : 'No'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Signature</p>
+                            <p>${policy.declaration.signature || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Date</p>
+                            <p>${policy.declaration.date || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Submitted At</p>
+                            <p>${policy.declaration.submittedAt ? formatDate(policy.declaration.submittedAt) : 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="view-policy-details">
+                    <h4 class="font-bold text-lg mb-2">Policy Summary</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-semibold">Status</p>
+                            <p>${policy.status || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Total Monthly Premium</p>
+                            <p>${formatCurrency(policy.totalMonthlyPremium || 0)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            funeralPolicyDetails.innerHTML = html;
+        }
+        
+        // Setup funeral status dropdown functionality
+        function setupFuneralStatusDropdowns() {
+            // Toggle status dropdowns
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('edit-funeral') || 
+                    (e.target.parentElement && e.target.parentElement.classList.contains('edit-funeral'))) {
+                    
+                    const button = e.target.classList.contains('edit-funeral') ? e.target : e.target.parentElement;
+                    const dropdown = button.nextElementSibling;
+                    
+                    // Close all other dropdowns
+                    document.querySelectorAll('.status-dropdown').forEach(menu => {
+                        if (menu !== dropdown) {
+                            menu.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    dropdown.classList.toggle('hidden');
+                } else {
+                    // Close all dropdowns when clicking elsewhere
+                    document.querySelectorAll('.status-dropdown').forEach(menu => {
+                        menu.classList.add('hidden');
+                    });
+                }
+            });
+
+            // Handle status change
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('status-option') || 
+                    (e.target.parentElement && e.target.parentElement.classList.contains('status-option'))) {
+                    
+                    const option = e.target.classList.contains('status-option') ? e.target : e.target.parentElement;
+                    const status = option.getAttribute('data-status');
+                    const userId = option.getAttribute('data-user-id');
+                    const funeralId = option.getAttribute('data-id');
+                    
+                    // Update the status in Firestore
+                    updateFuneralStatus(userId, funeralId, status);
+                    
+                    // Close the dropdown
+                    document.querySelectorAll('.status-dropdown').forEach(menu => {
+                        menu.classList.add('hidden');
+                    });
+                }
+            });
+        }
+        
+        // Update funeral status in Firestore
+        function updateFuneralStatus(userId, funeralId, status) {
+            showLoading('Updating funeral policy status...');
+            
+            // Capitalize the first letter for display
+            const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            db.collection('users').doc(userId).collection('funeral').doc(funeralId).update({
+                status: displayStatus
+            })
+            .then(() => {
+                hideLoading();
+                // Reload the funeral policies to reflect the change
+                loadFuneralsData();
+            })
+            .catch((error) => {
+                hideLoading();
+                showError('Update Error', 'Failed to update funeral policy status.');
+                console.error('Error updating funeral status:', error);
+            });
+        }
+        
+        // Close view funeral modal
+        closeViewFuneralModal.addEventListener('click', function() {
+            viewFuneralModal.classList.add('hidden');
+        });
+        
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            auth.signOut().then(() => {
+                window.location.href = '../index.html';
+            }).catch((error) => {
+                showError('Logout Error', error.message);
+                console.error('Error signing out:', error);
+            });
+        });
+        
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is authenticated and is an admin
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Check if user is admin
+                    db.collection('users').doc(user.uid).get()
+                        .then((doc) => {
+                            if (doc.exists && doc.data().role === 'admin') {
+                                // User is admin, load initial data
+                                loadFuneralsData();
+                            } else {
+                                // User is not admin, redirect
+                                window.location.href = '../index.html';
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error checking user role:', error);
+                            window.location.href = '../index.html';
+                        });
+                } else {
+                    // User is not logged in, redirect to login
+                    window.location.href = '../login.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

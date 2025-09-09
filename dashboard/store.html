@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Online Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .coming-soon-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1e40af; /* Blue 800 */
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .coming-soon-content {
+            max-width: 800px;
+        }
+        
+        .logo {
+            height: 4rem; /* 64px */
+            margin-bottom: 2rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .message {
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Mobile */
+        @media (max-width: 639px) {
+            .message {
+                font-size: 1.5rem; /* 24px */
+                line-height: 2rem; /* 32px */
+            }
+            .submessage {
+                font-size: 1rem; /* 16px */
+            }
+        }
+        
+        /* Tablet */
+        @media (min-width: 640px) and (max-width: 1023px) {
+            .message {
+                font-size: 2rem; /* 32px */
+                line-height: 2.5rem; /* 40px */
+            }
+            .submessage {
+                font-size: 1.25rem; /* 20px */
+            }
+        }
+        
+        /* Desktop */
+        @media (min-width: 1024px) {
+            .message {
+                font-size: 3rem; /* 48px */
+                line-height: 3.5rem; /* 56px */
+            }
+            .submessage {
+                font-size: 1.5rem; /* 24px */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="coming-soon-container">
+        <div class="coming-soon-content">
+            <img src="../assets/logo/Vema White.png" alt="Vema Logo" class="logo">
+            <div class="message">VEMA SHOP COMING SOON</div>
+            <div class="submessage">We're working hard to bring you an amazing shopping experience</div>
+        </div>
+    </div>
+</body>
+</html>

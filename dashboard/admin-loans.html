@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Loan Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .loan-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .outstanding-balance {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .outstanding-balance:hover {
+            background-color: #f0f9ff;
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-blue-800 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-hand-holding-usd fa-2x"></i>
+                    <h1 class="text-2xl font-bold">Loan Management System</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
+                <div class="loading-spinner"></div>
+                <p id="loading-text">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 hidden">
+            <strong class="font-bold" id="error-title">Error!</strong>
+            <span class="block sm:inline" id="error-details">Something went wrong.</span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <i class="fas fa-times cursor-pointer" onclick="document.getElementById('error-message').classList.add('hidden')"></i>
+            </span>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 hidden">
+            <strong class="font-bold" id="success-title">Success!</strong>
+            <span class="block sm:inline" id="success-details">Operation completed successfully.</span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <i class="fas fa-times cursor-pointer" onclick="document.getElementById('success-message').classList.add('hidden')"></i>
+            </span>
+        </div>
+
+        <!-- Loan View Modal -->
+        <div id="loan-view-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+            <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-3/5 xl:w-1/2 max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800">Loan Application Details</h3>
+                        <button id="close-view-modal" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="loan-details-content" class="loan-detail-grid">
+                        <!-- Loan details will be populated here -->
+                    </div>
+                    
+                    <div class="mt-8 flex justify-end">
+                        <button id="close-view-modal-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Loan Status Modal -->
+        <div id="edit-status-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+            <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800">Update Loan Status</h3>
+                        <button id="close-edit-modal" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="status-select">
+                            Loan Status
+                        </label>
+                        <select id="status-select" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Active">Active</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4 hidden" id="interest-rate-field">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="interest-rate">
+                            Interest Rate (%)
+                        </label>
+                        <input type="number" step="0.01" min="0" id="interest-rate" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    
+                    <div class="mt-8 flex justify-end space-x-4">
+                        <button id="cancel-edit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                            Cancel
+                        </button>
+                        <button id="save-status-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Deduction Modal -->
+        <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+            <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-800">Record Payment</h3>
+                        <button id="close-payment-modal" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="payment-amount">
+                            Payment Amount (R)
+                        </label>
+                        <input type="number" step="0.01" min="0" id="payment-amount" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="payment-date">
+                            Payment Date
+                        </label>
+                        <input type="date" id="payment-date" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="payment-reference">
+                            Reference Number
+                        </label>
+                        <input type="text" id="payment-reference" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Payment reference">
+                    </div>
+                    
+                    <div class="mt-8 flex justify-end space-x-4">
+                        <button id="cancel-payment-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                            Cancel
+                        </button>
+                        <button id="save-payment-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                            Record Payment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan Management Section -->
+        <section id="loans-section" class="dashboard-section active">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Loan Management Dashboard</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-blue-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-blue-800 font-semibold">Total Loans</p>
+                                <p id="total-loans" class="text-3xl font-bold text-blue-800">0</p>
+                            </div>
+                            <i class="fas fa-hand-holding-usd text-blue-800 text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items start">
+                            <div>
+                                <p class="text-green-800 font-semibold">Active Loans</p>
+                                <p id="active-loans" class="text-3xl font-bold text-green-800">0</p>
+                            </div>
+                            <i class="fas fa-check-circle text-green-800 text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-purple-800 font-semibold">Total Loan Value</p>
+                                <p id="total-loan-value" class="text-3xl font-bold text-purple-800">R0</p>
+                            </div>
+                            <i class="fas fa-money-bill-wave text-purple-800 text-2xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-amber-800 font-semibold">Pending Approval</p>
+                                <p id="pending-loans" class="text-3xl font-bold text-amber-800">0</p>
+                            </div>
+                            <i class="fas fa-clock text-amber-800 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrower</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interest Rate</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applied On</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loans-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Loans will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // DOM elements
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const loadingText = document.getElementById('loading-text');
+        const errorMessage = document.getElementById('error-message');
+        const errorTitle = document.getElementById('error-title');
+        const errorDetails = document.getElementById('error-details');
+        const successMessage = document.getElementById('success-message');
+        const successTitle = document.getElementById('success-title');
+        const successDetails = document.getElementById('success-details');
+        
+        // Modal elements
+        const loanViewModal = document.getElementById('loan-view-modal');
+        const loanDetailsContent = document.getElementById('loan-details-content');
+        const editStatusModal = document.getElementById('edit-status-modal');
+        const paymentModal = document.getElementById('payment-modal');
+        
+        // State variables
+        let currentEditingLoan = null;
+        let currentPaymentLoan = null;
+        let allLoans = [];
+
+        // Show/hide functions
+        function showLoading(message = 'Loading...') {
+            loadingText.textContent = message;
+            loadingIndicator.classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            loadingIndicator.classList.add('hidden');
+        }
+        
+        function showError(title, details) {
+            errorTitle.textContent = title;
+            errorDetails.textContent = details;
+            errorMessage.classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+            }, 5000);
+        }
+        
+        function showSuccess(title, details) {
+            successTitle.textContent = title;
+            successDetails.textContent = details;
+            successMessage.classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                successMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            if (!amount) return 'R0.00';
+            return 'R' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            
+            try {
+                const date = dateString.toDate ? dateString.toDate() : new Date(dateString);
+                return date.toLocaleDateString('en-ZA', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return 'Invalid Date';
+            }
+        }
+
+        // Get status badge class
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Active':
+                    return 'bg-green-100 text-green-800';
+                case 'Approved':
+                    return 'bg-blue-100 text-blue-800';
+                case 'Pending':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Rejected':
+                    return 'bg-red-100 text-red-800';
+                case 'Paid':
+                    return 'bg-purple-100 text-purple-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        // Load loan details for viewing
+        async function viewLoanDetails(userId, loanId) {
+            showLoading('Loading loan details...');
+            
+            try {
+                // Get the loan document
+                const loanDoc = await db.collection('users').doc(userId).collection('loans').doc(loanId).get();
+                
+                if (!loanDoc.exists) {
+                    throw new Error('Loan application not found');
+                }
+                
+                const loanData = loanDoc.data();
+                
+                // Get user details
+                const userDoc = await db.collection('users').doc(userId).get();
+                const userData = userDoc.data();
+                
+                // Format the loan data for display
+                const formattedData = {
+                    // Personal Information
+                    'Applicant Name': loanData.fullName || 'N/A',
+                    'ID Number': loanData.idNumber || 'N/A',
+                    'Phone Number': loanData.phoneNumber || 'N/A',
+                    'Email Address': loanData.email || 'N/A',
+                    'Residential Address': loanData.address || 'N/A',
+                    
+                    // Employment Information
+                    'Employer': loanData.employer || 'N/A',
+                    'Job Title': loanData.jobTitle || 'N/A',
+                    'Work Address': loanData.workAddress || 'N/A',
+                    'Work Contact': loanData.workContact || 'N/A',
+                    'Employment Date': formatDate(loanData.employmentDate),
+                    
+                    // Financial Information
+                    'Gross Salary': formatCurrency(loanData.grossSalary || 0),
+                    'Net Salary': formatCurrency(loanData.netSalary || 0),
+                    'Other Income': formatCurrency(loanData.otherIncome || 0),
+                    
+                    // Expenses
+                    'Rent': formatCurrency(loanData.rent || 0),
+                    'Food': formatCurrency(loanData.food || 0),
+                    'Transport': formatCurrency(loanData.transport || 0),
+                    'Existing Loans': formatCurrency(loanData.existingLoans || 0),
+                    'Other Expenses': formatCurrency(loanData.otherExpenses || 0),
+                    
+                    // Loan Details
+                    'Loan Amount': formatCurrency(loanData.loanAmount || 0),
+                    'Outstanding Balance': formatCurrency(loanData.outstandingBalance || loanData.loanAmount || 0),
+                    'Loan Term': loanData.loanTerm ? `${loanData.loanTerm} months` : 'N/A',
+                    'Loan Purpose': loanData.purpose || 'N/A',
+                    'Monthly Repayment': loanData.monthlyRepayment ? formatCurrency(loanData.monthlyRepayment) : 'N/A',
+                    'Total Repayment': loanData.totalRepayment ? formatCurrency(loanData.totalRepayment) : 'N/A',
+                    'Interest Rate': loanData.interestRate ? `${loanData.interestRate}%` : 'N/A',
+                    
+                    // Application Metadata
+                    'Application Date': formatDate(loanData.applicationDate),
+                    'Status': loanData.status || 'Pending',
+                    'User ID': userId,
+                    'User Email': userData.email || 'N/A'
+                };
+                
+                // Generate HTML for the loan details
+                let detailsHtml = '';
+                
+                for (const [key, value] of Object.entries(formattedData)) {
+                    detailsHtml += `
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-700">${key}</h4>
+                            <p class="text-gray-900">${value}</p>
+                        </div>
+                    `;
+                }
+                
+                // Add document links if available
+                detailsHtml += `<div class="mb-4 col-span-full"><h4 class="font-semibold text-gray-700 mb-2">Attached Documents</h4><div class="flex flex-wrap gap-2">`;
+                
+                if (loanData.idDocumentUrl) {
+                    detailsHtml += `<a href="${loanData.idDocumentUrl}" target="_blank" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm hover:bg-blue-200">ID Document</a>`;
+                }
+                
+                if (loanData.payslipUrl) {
+                    detailsHtml += `<a href="${loanData.payslipUrl}" target="_blank" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm hover:bg-blue-200">Payslip</a>`;
+                }
+                
+                if (loanData.bankStatementUrl) {
+                    detailsHtml += `<a href="${loanData.bankStatementUrl}" target="_blank" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm hover:bg-blue-200">Bank Statement</a>`;
+                }
+                
+                if (loanData.employmentConfirmationUrl) {
+                    detailsHtml += `<a href="${loanData.employmentConfirmationUrl}" target="_blank" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm hover:bg-blue-200">Employment Confirmation</a>`;
+                }
+                
+                detailsHtml += `</div></div>`;
+                
+                // Update modal content
+                loanDetailsContent.innerHTML = detailsHtml;
+                
+                // Show the modal
+                loanViewModal.classList.remove('hidden');
+                
+            } catch (error) {
+                showError('Load Error', 'Failed to load loan details: ' + error.message);
+                console.error('Error loading loan details:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Open edit status modal
+        function openEditStatusModal(loan) {
+            currentEditingLoan = loan;
+            
+            // Set current status
+            document.getElementById('status-select').value = loan.status || 'Pending';
+            
+            // Set interest rate if exists
+            if (loan.interestRate) {
+                document.getElementById('interest-rate').value = loan.interestRate;
+            }
+            
+            // Show interest rate field only for approved/active status
+            const interestField = document.getElementById('interest-rate-field');
+            if (loan.status === 'Approved' || loan.status === 'Active') {
+                interestField.classList.remove('hidden');
+            } else {
+                interestField.classList.add('hidden');
+            }
+            
+            // Show the modal
+            editStatusModal.classList.remove('hidden');
+        }
+
+        // Open payment modal
+        function openPaymentModal(loan) {
+            currentPaymentLoan = loan;
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('payment-date').value = today;
+            
+            // Clear previous values
+            document.getElementById('payment-amount').value = '';
+            document.getElementById('payment-reference').value = '';
+            
+            // Show the modal
+            paymentModal.classList.remove('hidden');
+        }
+
+        // Save loan status changes
+        async function saveLoanStatus() {
+            if (!currentEditingLoan) return;
+            
+            showLoading('Updating loan status...');
+            
+            try {
+                const newStatus = document.getElementById('status-select').value;
+                const interestRate = document.getElementById('interest-rate').value;
+                
+                const updateData = {
+                    status: newStatus,
+                    updatedAt: new Date()
+                };
+                
+                // Only update interest rate if provided and for approved/active loans
+                if (interestRate && (newStatus === 'Approved' || newStatus === 'Active')) {
+                    updateData.interestRate = parseFloat(interestRate);
+                }
+                
+                // Update the loan document
+                await db.collection('users')
+                    .doc(currentEditingLoan.userId)
+                    .collection('loans')
+                    .doc(currentEditingLoan.id)
+                    .update(updateData);
+                
+                // Close the modal
+                editStatusModal.classList.add('hidden');
+                
+                // Show success message
+                showSuccess('Status Updated', 'Loan status has been updated successfully.');
+                
+                // Refresh the loans data
+                loadLoansData();
+                
+            } catch (error) {
+                showError('Update Error', 'Failed to update loan status: ' + error.message);
+                console.error('Error updating loan status:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Save payment
+        async function savePayment() {
+            if (!currentPaymentLoan) return;
+            
+            showLoading('Recording payment...');
+            
+            try {
+                const paymentAmount = parseFloat(document.getElementById('payment-amount').value);
+                const paymentDate = document.getElementById('payment-date').value;
+                const paymentReference = document.getElementById('payment-reference').value;
+                
+                if (!paymentAmount || paymentAmount <= 0) {
+                    throw new Error('Please enter a valid payment amount');
+                }
+                
+                // Get current loan data
+                const loanDoc = await db.collection('users')
+                    .doc(currentPaymentLoan.userId)
+                    .collection('loans')
+                    .doc(currentPaymentLoan.id)
+                    .get();
+                
+                if (!loanDoc.exists) {
+                    throw new Error('Loan not found');
+                }
+                
+                const loanData = loanDoc.data();
+                const currentOutstanding = parseFloat(loanData.outstandingBalance || loanData.loanAmount);
+                
+                if (paymentAmount > currentOutstanding) {
+                    throw new Error('Payment amount cannot exceed outstanding balance');
+                }
+                
+                // Calculate new outstanding balance
+                const newOutstanding = currentOutstanding - paymentAmount;
+                
+                // Create payment record
+                const paymentData = {
+                    amount: paymentAmount,
+                    date: new Date(paymentDate),
+                    reference: paymentReference,
+                    recordedAt: new Date(),
+                    loanId: currentPaymentLoan.id,
+                    userId: currentPaymentLoan.userId
+                };
+                
+                // Update loan outstanding balance and add payment to history
+                await db.collection('users')
+                    .doc(currentPaymentLoan.userId)
+                    .collection('loans')
+                    .doc(currentPaymentLoan.id)
+                    .update({
+                        outstandingBalance: newOutstanding,
+                        updatedAt: new Date()
+                    });
+                
+                // Add payment to payments subcollection
+                await db.collection('users')
+                    .doc(currentPaymentLoan.userId)
+                    .collection('loans')
+                    .doc(currentPaymentLoan.id)
+                    .collection('payments')
+                    .add(paymentData);
+                
+                // If paid in full, update status
+                if (newOutstanding <= 0) {
+                    await db.collection('users')
+                        .doc(currentPaymentLoan.userId)
+                        .collection('loans')
+                        .doc(currentPaymentLoan.id)
+                        .update({
+                            status: 'Paid'
+                        });
+                }
+                
+                // Close the modal
+                paymentModal.classList.add('hidden');
+                
+                // Show success message
+                showSuccess('Payment Recorded', 'Payment has been recorded successfully.');
+                
+                // Refresh the loans data
+                loadLoansData();
+                
+            } catch (error) {
+                showError('Payment Error', 'Failed to record payment: ' + error.message);
+                console.error('Error recording payment:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Load loans data
+        function loadLoansData() {
+            showLoading('Loading loans...');
+            
+            // Get all users and their loans
+            db.collection('users').get().then((usersSnapshot) => {
+                const loansTableBody = document.getElementById('loans-table-body');
+                
+                if (usersSnapshot.empty) {
+                    loansTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                No loans found.
+                            </td>
+                        </tr>
+                    `;
+                    hideLoading();
+                    return;
+                }
+                
+                allLoans = [];
+                let totalLoans = 0;
+                let activeLoans = 0;
+                let pendingLoans = 0;
+                let totalLoanValue = 0;
+                
+                // Process each user's loans
+                const userPromises = [];
+                usersSnapshot.forEach((userDoc) => {
+                    const userData = userDoc.data();
+                    const promise = db.collection('users').doc(userDoc.id).collection('loans').get()
+                        .then((loansSnapshot) => {
+                            loansSnapshot.forEach((loanDoc) => {
+                                const loan = loanDoc.data();
+                                loan.id = loanDoc.id;
+                                loan.userId = userDoc.id;
+                                loan.userName = userData.fullName || userData.name || userData.email;
+                                allLoans.push(loan);
+                                
+                                totalLoans++;
+                                if (loan.status === 'Active') activeLoans++;
+                                if (loan.status === 'Pending') pendingLoans++;
+                                totalLoanValue += parseFloat(loan.loanAmount) || 0;
+                            });
+                        });
+                    userPromises.push(promise);
+                });
+                
+                // Wait for all loans to be loaded
+                Promise.all(userPromises).then(() => {
+                    // Update summary cards
+                    document.getElementById('total-loans').textContent = totalLoans;
+                    document.getElementById('active-loans').textContent = activeLoans;
+                    document.getElementById('pending-loans').textContent = pendingLoans;
+                    document.getElementById('total-loan-value').textContent = formatCurrency(totalLoanValue);
+                    
+                    if (allLoans.length === 0) {
+                        loansTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                    No loans found.
+                                </td>
+                            </tr>
+                        `;
+                        hideLoading();
+                        return;
+                    }
+                    
+                    // Sort loans by application date (newest first)
+                    allLoans.sort((a, b) => {
+                        const dateA = a.applicationDate ? (a.applicationDate.toDate ? a.applicationDate.toDate() : new Date(a.applicationDate)) : new Date(0);
+                        const dateB = b.applicationDate ? (b.applicationDate.toDate ? b.applicationDate.toDate() : new Date(b.applicationDate)) : new Date(0);
+                        return dateB - dateA;
+                    });
+                    
+                    // Render loans table
+                    let loansHtml = '';
+                    allLoans.forEach((loan) => {
+                        const outstanding = parseFloat(loan.outstandingBalance || loan.loanAmount);
+                        
+                        loansHtml += `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium">${loan.userName}</div>
+                                    <div class="text-sm text-gray-500">${loan.idNumber || 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium">${formatCurrency(loan.loanAmount || 0)}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium outstanding-balance" data-user-id="${loan.userId}" data-loan-id="${loan.id}">
+                                        ${formatCurrency(outstanding)}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-gray-500">${loan.interestRate ? loan.interestRate + '%' : 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(loan.status)}">
+                                        ${loan.status || 'N/A'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">${formatDate(loan.applicationDate)}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-2 view-loan" data-user-id="${loan.userId}" data-loan-id="${loan.id}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-green-600 hover:text-green-900 mr-2 edit-loan" data-user-id="${loan.userId}" data-loan-id="${loan.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    loansTableBody.innerHTML = loansHtml;
+                    
+                    // Add event listeners to view buttons
+                    document.querySelectorAll('.view-loan').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const userId = button.getAttribute('data-user-id');
+                            const loanId = button.getAttribute('data-loan-id');
+                            viewLoanDetails(userId, loanId);
+                        });
+                    });
+                    
+                    // Add event listeners to edit buttons
+                    document.querySelectorAll('.edit-loan').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const userId = button.getAttribute('data-user-id');
+                            const loanId = button.getAttribute('data-loan-id');
+                            const loan = allLoans.find(l => l.userId === userId && l.id === loanId);
+                            if (loan) openEditStatusModal(loan);
+                        });
+                    });
+                    
+                    // Add event listeners to outstanding balance cells
+                    document.querySelectorAll('.outstanding-balance').forEach(cell => {
+                        cell.addEventListener('click', () => {
+                            const userId = cell.getAttribute('data-user-id');
+                            const loanId = cell.getAttribute('data-loan-id');
+                            const loan = allLoans.find(l => l.userId === userId && l.id === loanId);
+                            if (loan) openPaymentModal(loan);
+                        });
+                    });
+                    
+                    hideLoading();
+                });
+            }).catch((error) => {
+                showError('Data Error', 'Failed to load loans. Please refresh the page.');
+                console.error('Error loading loans:', error);
+                hideLoading();
+            });
+        }
+        
+        // Event listeners for modals
+        document.getElementById('close-view-modal').addEventListener('click', () => {
+            loanViewModal.classList.add('hidden');
+        });
+        
+        document.getElementById('close-view-modal-btn').addEventListener('click', () => {
+            loanViewModal.classList.add('hidden');
+        });
+        
+        document.getElementById('close-edit-modal').addEventListener('click', () => {
+            editStatusModal.classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+            editStatusModal.classList.add('hidden');
+        });
+        
+        document.getElementById('save-status-btn').addEventListener('click', saveLoanStatus);
+        
+        document.getElementById('close-payment-modal').addEventListener('click', () => {
+            paymentModal.classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-payment-btn').addEventListener('click', () => {
+            paymentModal.classList.add('hidden');
+        });
+        
+        document.getElementById('save-payment-btn').addEventListener('click', savePayment);
+        
+        // Toggle interest rate field based on status selection
+        document.getElementById('status-select').addEventListener('change', function() {
+            const interestField = document.getElementById('interest-rate-field');
+            if (this.value === 'Approved' || this.value === 'Active') {
+                interestField.classList.remove('hidden');
+            } else {
+                interestField.classList.add('hidden');
+            }
+        });
+        
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            auth.signOut().then(() => {
+                window.location.href = '../index.html';
+            }).catch((error) => {
+                showError('Logout Error', error.message);
+                console.error('Error signing out:', error);
+            });
+        });
+        
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // For demo purposes, we'll simulate admin access
+            loadLoansData();
+            
+            // In a real application, you would check if the user is authenticated and is an admin
+            /*
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Check if user is admin
+                    db.collection('users').doc(user.uid).get()
+                        .then((doc) => {
+                            if (doc.exists && doc.data().role === 'admin') {
+                                // User is admin, load initial data
+                                loadLoansData();
+                            } else {
+                                // User is not admin, redirect
+                                window.location.href = '../index.html';
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error checking user role:', error);
+                            window.location.href = '../index.html';
+                        });
+                } else {
+                    // User is not logged in, redirect to login
+                    window.location.href = '../login.html';
+                }
+            });
+            */
+        });
+    </script>
+</body>
+</html>

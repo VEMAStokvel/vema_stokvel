@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funeral Cover Application Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-storage-compat.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2" id="loadingText">Processing your application</h3>
+            <p class="text-sm text-gray-500">Please wait while we save your information...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Application Submitted Successfully!</h3>
+            <p class="text-sm text-gray-500 mb-6">Your funeral cover application has been received. We'll contact you shortly.</p>
+            <button onclick="document.getElementById('successModal').classList.add('hidden')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2" id="errorTitle">Submission Error</h3>
+            <p class="text-sm text-gray-500 mb-6" id="errorMessage">There was an error submitting your application. Please try again.</p>
+            <button onclick="document.getElementById('errorModal').classList.add('hidden')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                Try Again
+            </button>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <!-- Form Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-4">
+                <h1 class="text-2xl font-bold">Funeral Cover Application</h1>
+                <p class="text-blue-100 text-sm mt-1">Complete this form to apply for comprehensive funeral coverage</p>
+            </div>
+            
+            <!-- Progress Steps -->
+            <div class="px-6 py-4 border-b">
+                <div class="flex items-center">
+                    <div class="flex items-center text-blue-600 relative">
+                        <div class="rounded-full transition duration-500 ease-in-out h-8 w-8 py-1 border-2 border-blue-600 bg-blue-600">
+                            <div class="text-white font-bold text-sm text-center">1</div>
+                        </div>
+                        <div class="absolute top-0 -ml-10 text-center mt-10 w-32 text-xs font-medium text-blue-600">Main Member</div>
+                    </div>
+                    <div class="flex-auto border-t-2 transition duration-500 ease-in-out border-blue-600"></div>
+                    <div class="flex items-center text-gray-500 relative">
+                        <div class="rounded-full transition duration-500 ease-in-out h-8 w-8 py-1 border-2 border-gray-300">
+                            <div class="text-gray-600 font-bold text-sm text-center">2</div>
+                        </div>
+                        <div class="absolute top-0 -ml-10 text-center mt-10 w-32 text-xs font-medium text-gray-500">Family Members</div>
+                    </div>
+                    <div class="flex-auto border-t-2 transition duration-500 ease-in-out border-gray-300"></div>
+                    <div class="flex items-center text-gray-500 relative">
+                        <div class="rounded-full transition duration-500 ease-in-out h-8 w-8 py-1 border-2 border-gray-300">
+                            <div class="text-gray-600 font-bold text-sm text-center">3</div>
+                        </div>
+                        <div class="absolute top-0 -ml-10 text-center mt-10 w-32 text-xs font-medium text-gray-500">Declaration</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Form Content -->
+            <form id="funeralForm" class="p-6">
+                <!-- Main Member Section -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center">
+                        <i class="fas fa-user-circle mr-2 text-blue-600"></i>
+                        Main Member Details
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                            <input type="text" id="fullName" name="fullName" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="fullNameError">Please enter your full name</p>
+                        </div>
+                        
+                        <div>
+                            <label for="idNumber" class="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
+                            <input type="text" id="idNumber" name="idNumber" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="idNumberError">Please enter a valid ID number</p>
+                        </div>
+                        
+                        <div>
+                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="phoneNumberError">Please enter a valid phone number</p>
+                        </div>
+                        
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input type="email" id="email" name="email" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="emailError">Please enter a valid email address</p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                            <input type="text" id="address" name="address" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="addressError">Please enter your address</p>
+                        </div>
+                        
+                        <!-- ID Upload Section -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload ID Document *</label>
+                            <div class="mt-1 flex items-center">
+                                <label for="idDocument" class="cursor-pointer">
+                                    <div class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition duration-150">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg class="w-10 h-10 mb-3 text-gray-400 group-hover:text-blue-500 transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                            </svg>
+                                            <p class="mb-2 text-sm text-gray-500 group-hover:text-blue-500 transition duration-150">
+                                                <span class="font-semibold">Click to upload</span> or drag and drop
+                                            </p>
+                                            <p class="text-xs text-gray-500">PDF, JPG, PNG up to 5MB</p>
+                                        </div>
+                                        <input id="idDocument" name="idDocument" type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    </div>
+                                </label>
+                            </div>
+                            <div id="idDocumentPreview" class="mt-2 hidden">
+                                <div class="flex items-center p-2 bg-green-50 rounded-md border border-green-200">
+                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                    <span class="text-sm font-medium text-green-800" id="idDocumentName">Document uploaded</span>
+                                    <button type="button" onclick="removeIdDocument()" class="ml-auto text-red-500 hover:text-red-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="idDocumentError">Please upload your ID document</p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                            <div class="flex items-center bg-blue-50 px-4 py-3 rounded-md border border-blue-200">
+                                <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-money-bill-wave text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-lg text-blue-800">R75</span>
+                                    <span class="ml-2 text-sm text-blue-600">(Includes Spouse and Kids)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Extended Family Members Section -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center">
+                        <i class="fas fa-users mr-2 text-blue-600"></i>
+                        Extended Family Members
+                    </h2>
+                    <p class="text-sm text-gray-600 mb-4">You may add extended family members for an additional monthly fee:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-md border border-blue-200">
+                            <div class="flex items-center mb-2">
+                                <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-child text-blue-600"></i>
+                                </div>
+                                <p class="font-medium text-blue-800">Under 65</p>
+                            </div>
+                            <p class="text-xl font-bold text-blue-900">R55/month</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-md border border-blue-200">
+                            <div class="flex items-center mb-2">
+                                <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                                <p class="font-medium text-blue-800">65 and above</p>
+                            </div>
+                            <p class="text-xl font-bold text-blue-900">R85/month</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-md border border-blue-200">
+                            <div class="flex items-center mb-2">
+                                <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-info-circle text-blue-600"></i>
+                                </div>
+                                <p class="font-medium text-blue-800">Coverage Details</p>
+                            </div>
+                            <p class="text-sm text-blue-800">Each member gets R15,000 coverage</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Member 1 -->
+                    <div class="member-section bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-medium text-gray-700 flex items-center">
+                                <i class="fas fa-user mr-2 text-blue-600"></i>
+                                Member 1
+                            </h3>
+                            <button type="button" class="text-sm text-blue-600 hover:text-blue-800" onclick="toggleMemberSection(1)">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div id="memberSection1" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="member1Name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="member1Name" name="member1Name" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member1Id" class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                                <input type="text" id="member1Id" name="member1Id" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member1Age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                <input type="number" id="member1Age" name="member1Age" min="1" max="120" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member1Relationship" class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                                <select id="member1Relationship" name="member1Relationship" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                                    <option value="">Select relationship</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="member1Premium" class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                                <select id="member1Premium" name="member1Premium" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                                    <option value="">Select premium</option>
+                                    <option value="55">R55 (Under 65)</option>
+                                    <option value="85">R85 (65 and above)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Upload ID Document</label>
+                                <div class="mt-1 flex items-center">
+                                    <label for="member1IdDocument" class="cursor-pointer">
+                                        <div class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition duration-150">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <svg class="w-10 h-10 mb-3 text-gray-400 group-hover:text-blue-500 transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                                </svg>
+                                                <p class="mb-2 text-sm text-gray-500 group-hover:text-blue-500 transition duration-150">
+                                                    <span class="font-semibold">Click to upload</span>
+                                                </p>
+                                                <p class="text-xs text-gray-500">PDF, JPG, PNG up to 5MB</p>
+                                            </div>
+                                            <input id="member1IdDocument" name="member1IdDocument" type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="member1IdDocumentPreview" class="mt-2 hidden">
+                                    <div class="flex items-center p-2 bg-green-50 rounded-md border border-green-200">
+                                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                        <span class="text-sm font-medium text-green-800" id="member1IdDocumentName">Document uploaded</span>
+                                        <button type="button" onclick="removeMemberIdDocument(1)" class="ml-auto text-red-500 hover:text-red-700">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Member 2 -->
+                    <div class="member-section bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-medium text-gray-700 flex items-center">
+                                <i class="fas fa-user mr-2 text-blue-600"></i>
+                                Member 2
+                            </h3>
+                            <button type="button" class="text-sm text-blue-600 hover:text-blue-800" onclick="toggleMemberSection(2)">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div id="memberSection2" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                            <div>
+                                <label for="member2Name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="member2Name" name="member2Name" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member2Id" class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                                <input type="text" id="member2Id" name="member2Id" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member2Age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                <input type="number" id="member2Age" name="member2Age" min="1" max="120" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member2Relationship" class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                                <select id="member2Relationship" name="member2Relationship" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                                    <option value="">Select relationship</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="member2Premium" class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                                <select id="member2Premium" name="member2Premium" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                                    <option value="">Select premium</option>
+                                    <option value="55">R55 (Under 65)</option>
+                                    <option value="85">R85 (65 and above)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Upload ID Document</label>
+                                <div class="mt-1 flex items-center">
+                                    <label for="member2IdDocument" class="cursor-pointer">
+                                        <div class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition duration-150">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <svg class="w-10 h-10 mb-3 text-gray-400 group-hover:text-blue-500 transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                                </svg>
+                                                <p class="mb-2 text-sm text-gray-500 group-hover:text-blue-500 transition duration-150">
+                                                    <span class="font-semibold">Click to upload</span>
+                                                </p>
+                                                <p class="text-xs text-gray-500">PDF, JPG, PNG up to 5MB</p>
+                                            </div>
+                                            <input id="member2IdDocument" name="member2IdDocument" type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="member2IdDocumentPreview" class="mt-2 hidden">
+                                    <div class="flex items-center p-2 bg-green-50 rounded-md border border-green-200">
+                                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                        <span class="text-sm font-medium text-green-800" id="member2IdDocumentName">Document uploaded</span>
+                                        <button type="button" onclick="removeMemberIdDocument(2)" class="ml-auto text-red-500 hover:text-red-700">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Member 3 -->
+                    <div class="member-section bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-medium text-gray-700 flex items-center">
+                                <i class="fas fa-user mr-2 text-blue-600"></i>
+                                Member 3
+                            </h3>
+                            <button type="button" class="text-sm text-blue-600 hover:text-blue-800" onclick="toggleMemberSection(3)">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div id="memberSection3" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                            <div>
+                                <label for="member3Name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="member3Name" name="member3Name" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member3Id" class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                                <input type="text" id="member3Id" name="member3Id" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member3Age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                                <input type="number" id="member3Age" name="member3Age" min="1" max="120" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            </div>
+                            <div>
+                                <label for="member3Relationship" class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                                <select id="member3Relationship" name="member3Relationship" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                                    <option value="">Select relationship</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="member3Premium" class="block text-sm font-medium text-gray-700 mb-1">Monthly Premium</label>
+                                <select id="member3Premium" name="member3Premium" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                                    <option value="">Select premium</option>
+                                    <option value="55">R55 (Under 65)</option>
+                                    <option value="85">R85 (65 and above)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Upload ID Document</label>
+                                <div class="mt-1 flex items-center">
+                                    <label for="member3IdDocument" class="cursor-pointer">
+                                        <div class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition duration-150">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <svg class="w-10 h-10 mb-3 text-gray-400 group-hover:text-blue-500 transition duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                                </svg>
+                                                <p class="mb-2 text-sm text-gray-500 group-hover:text-blue-500 transition duration-150">
+                                                    <span class="font-semibold">Click to upload</span>
+                                                </p>
+                                                <p class="text-xs text-gray-500">PDF, JPG, PNG up to 5MB</p>
+                                            </div>
+                                            <input id="member3IdDocument" name="member3IdDocument" type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="member3IdDocumentPreview" class="mt-2 hidden">
+                                    <div class="flex items-center p-2 bg-green-50 rounded-md border border-green-200">
+                                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                        <span class="text-sm font-medium text-green-800" id="member3IdDocumentName">Document uploaded</span>
+                                        <button type="button" onclick="removeMemberIdDocument(3)" class="ml-auto text-red-500 hover:text-red-700">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Another Member Button -->
+                    <div class="text-center">
+                        <button type="button" id="addMemberBtn" class="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center mx-auto" onclick="addAnotherMember()">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            Add Another Family Member
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Declaration Section -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center">
+                        <i class="fas fa-file-signature mr-2 text-blue-600"></i>
+                        Declaration
+                    </h2>
+                    <div class="bg-blue-50 p-4 rounded-md border border-blue-200 mb-6">
+                        <p class="text-sm text-gray-700 mb-4">
+                            I declare that the information provided is accurate and complete. I understand that incorrect or false information may result in cancellation of my policy or non-payment of claims.
+                        </p>
+                        
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input id="declaration" name="declaration" type="checkbox" required 
+                                       class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="declaration" class="font-medium text-gray-700">I agree to the terms and conditions *</label>
+                                <p class="text-gray-500">By checking this box, you confirm that all information provided is accurate.</p>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500 hidden" id="declarationError">You must agree to the terms and conditions</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="signature" class="block text-sm font-medium text-gray-700 mb-1">Applicant Signature *</label>
+                            <input type="text" id="signature" name="signature" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="signatureError">Please provide your signature</p>
+                        </div>
+                        
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                            <input type="date" id="date" name="date" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="dateError">Please select the date</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row justify-between gap-4 border-t pt-6">
+                    <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                        Save Draft
+                    </button>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button type="reset" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                            Reset Form
+                        </button>
+                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors shadow-md">
+                            Submit Application
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Global variables
+        let idDocumentFile = null;
+        let memberIdDocuments = {1: null, 2: null, 3: null};
+        let totalMembers = 1;
+
+        // DOM Ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize file upload handlers
+            initFileUploads();
+            
+            // Initialize form validation
+            initFormValidation();
+            
+            // Set today's date as default
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Initialize member sections
+            toggleMemberSection(2);
+            toggleMemberSection(3);
+        });
+
+        // Initialize file upload handlers
+        function initFileUploads() {
+            // Main ID document upload
+            document.getElementById('idDocument').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    if (validateFile(file)) {
+                        idDocumentFile = file;
+                        document.getElementById('idDocumentName').textContent = file.name;
+                        document.getElementById('idDocumentPreview').classList.remove('hidden');
+                        document.getElementById('idDocumentError').classList.add('hidden');
+                    }
+                }
+            });
+            
+            // Member ID documents upload
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`member${i}IdDocument`).addEventListener('change', function(e) {
+                    if (e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        if (validateFile(file)) {
+                            memberIdDocuments[i] = file;
+                            document.getElementById(`member${i}IdDocumentName`).textContent = file.name;
+                            document.getElementById(`member${i}IdDocumentPreview`).classList.remove('hidden');
+                        }
+                    }
+                });
+            }
+        }
+
+        // Validate file uploads
+        function validateFile(file) {
+            const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            
+            if (!validTypes.includes(file.type)) {
+                showError('Error', 'Please upload a valid file type (PDF, JPG, PNG)');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                showError('Error', 'File size must be less than 5MB');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Remove main ID document
+        function removeIdDocument() {
+            idDocumentFile = null;
+            document.getElementById('idDocument').value = '';
+            document.getElementById('idDocumentPreview').classList.add('hidden');
+        }
+
+        // Remove member ID document
+        function removeMemberIdDocument(memberNum) {
+            memberIdDocuments[memberNum] = null;
+            document.getElementById(`member${memberNum}IdDocument`).value = '';
+            document.getElementById(`member${memberNum}IdDocumentPreview`).classList.add('hidden');
+        }
+
+        // Toggle member section visibility
+        function toggleMemberSection(memberNum) {
+            const section = document.getElementById(`memberSection${memberNum}`);
+            const btn = document.querySelector(`.member-section:nth-child(${memberNum + 1}) button`);
+            
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+            } else {
+                section.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            }
+        }
+
+        // Add another member section
+        function addAnotherMember() {
+            if (totalMembers >= 3) {
+                showError('Maximum Members', 'You can only add up to 3 extended family members');
+                document.getElementById('addMemberBtn').classList.add('hidden');
+                return;
+            }
+            
+            totalMembers++;
+            toggleMemberSection(totalMembers);
+            
+            if (totalMembers >= 3) {
+                document.getElementById('addMemberBtn').classList.add('hidden');
+            }
+        }
+
+        // Initialize form validation
+        function initFormValidation() {
+            const form = document.getElementById('funeralForm');
+            
+            // Validate on blur
+            const requiredFields = ['fullName', 'idNumber', 'phoneNumber', 'address', 'signature', 'date'];
+            requiredFields.forEach(field => {
+                document.getElementById(field).addEventListener('blur', function() {
+                    validateField(this);
+                });
+            });
+            
+            // Validate email format
+            document.getElementById('email').addEventListener('blur', function() {
+                if (this.value && !this.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                    showFieldError(this, 'Please enter a valid email address');
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            
+            // Validate ID number format (South African ID)
+            document.getElementById('idNumber').addEventListener('blur', function() {
+                if (this.value && !this.value.match(/^[0-9]{13}$/)) {
+                    showFieldError(this, 'Please enter a valid 13-digit ID number');
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            
+            // Validate phone number format
+            document.getElementById('phoneNumber').addEventListener('blur', function() {
+                if (this.value && !this.value.match(/^[0-9]{10,15}$/)) {
+                    showFieldError(this, 'Please enter a valid phone number');
+                } else {
+                    clearFieldError(this);
+                }
+            });
+            
+            // Validate declaration checkbox
+            document.getElementById('declaration').addEventListener('change', function() {
+                if (!this.checked) {
+                    document.getElementById('declarationError').classList.remove('hidden');
+                } else {
+                    document.getElementById('declarationError').classList.add('hidden');
+                }
+            });
+        }
+
+        // Validate a single field
+        function validateField(field) {
+            if (!field.value.trim()) {
+                showFieldError(field, 'This field is required');
+                return false;
+            } else {
+                clearFieldError(field);
+                return true;
+            }
+        }
+
+        // Show field error
+        function showFieldError(field, message) {
+            field.classList.add('border-red-500');
+            field.classList.remove('border-gray-300');
+            const errorElement = document.getElementById(`${field.id}Error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+        }
+
+        // Clear field error
+        function clearFieldError(field) {
+            field.classList.remove('border-red-500');
+            field.classList.add('border-gray-300');
+            const errorElement = document.getElementById(`${field.id}Error`);
+            if (errorElement) {
+                errorElement.classList.add('hidden');
+            }
+        }
+
+        // Show error modal
+        function showError(title, message) {
+            document.getElementById('errorTitle').textContent = title;
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorModal').classList.remove('hidden');
+        }
+
+        // Show loading overlay
+        function showLoading(message) {
+            if (message) {
+                document.getElementById('loadingText').textContent = message;
+            }
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        // Upload file to Firebase Storage
+        async function uploadFile(file, path) {
+            try {
+                const storageRef = storage.ref();
+                const fileRef = storageRef.child(path);
+                const uploadTask = await fileRef.put(file);
+                const downloadURL = await uploadTask.ref.getDownloadURL();
+                return downloadURL;
+            } catch (error) {
+                console.error("Error uploading file: ", error);
+                throw error;
+            }
+        }
+
+        // Save form data to Firestore
+        async function saveFormData(formData) {
+            try {
+                showLoading('Saving your application...');
+                
+                // Get current user
+                const user = auth.currentUser;
+                
+                if (!user) {
+                    throw new Error("No user is signed in.");
+                }
+                
+                // Upload ID document if exists
+                let idDocumentUrl = '';
+                if (idDocumentFile) {
+                    idDocumentUrl = await uploadFile(idDocumentFile, `users/${user.uid}/id_documents/${Date.now()}_${idDocumentFile.name}`);
+                }
+                
+                // Upload member ID documents
+                const memberDocumentsUrls = {};
+                for (let i = 1; i <= 3; i++) {
+                    if (memberIdDocuments[i]) {
+                        memberDocumentsUrls[i] = await uploadFile(
+                            memberIdDocuments[i], 
+                            `users/${user.uid}/member_documents/member${i}_${Date.now()}_${memberIdDocuments[i].name}`
+                        );
+                    }
+                }
+                
+                // Prepare the data to save
+                const funeralData = {
+                    mainMember: {
+                        fullName: formData.fullName,
+                        idNumber: formData.idNumber,
+                        phoneNumber: formData.phoneNumber,
+                        email: formData.email || '',
+                        address: formData.address,
+                        premium: 75, // Base premium
+                        idDocumentUrl: idDocumentUrl || ''
+                    },
+                    extendedMembers: [],
+                    declaration: {
+                        agreed: formData.declaration === 'on',
+                        signature: formData.signature,
+                        date: formData.date,
+                        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    },
+                    status: 'submitted',
+                    totalMonthlyPremium: 75 // Start with base premium
+                };
+
+                // Add extended members if they exist
+                for (let i = 1; i <= 3; i++) {
+                    const memberName = formData[`member${i}Name`];
+                    if (memberName && memberName.trim() !== '') {
+                        const premium = parseInt(formData[`member${i}Premium`]) || 0;
+                        funeralData.extendedMembers.push({
+                            name: memberName,
+                            idNumber: formData[`member${i}Id`] || '',
+                            age: parseInt(formData[`member${i}Age`]) || 0,
+                            relationship: formData[`member${i}Relationship`] || '',
+                            premium: premium,
+                            idDocumentUrl: memberDocumentsUrls[i] || ''
+                        });
+                        funeralData.totalMonthlyPremium += premium;
+                    }
+                }
+
+                // Save to Firestore under users/{uid}/funeral/{docId}
+                const docRef = await db.collection(`users/${user.uid}/funeral`).add(funeralData);
+                console.log("Document written with ID: ", docRef.id);
+                return true;
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                throw error;
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+        
+        // Form submission handler
+        document.getElementById('funeralForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validate main member fields
+            const requiredFields = ['fullName', 'idNumber', 'phoneNumber', 'address', 'signature', 'date'];
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!validateField(document.getElementById(field))) {
+                    isValid = false;
+                }
+            });
+            
+            // Validate ID document
+            if (!idDocumentFile) {
+                document.getElementById('idDocumentError').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('idDocumentError').classList.add('hidden');
+            }
+            
+            // Validate declaration checkbox
+            if (!document.getElementById('declaration').checked) {
+                document.getElementById('declarationError').classList.remove('hidden');
+                isValid = false;
+            } else {
+                document.getElementById('declarationError').classList.add('hidden');
+            }
+            
+            if (!isValid) {
+                showError('Validation Error', 'Please fill in all required fields correctly');
+                return;
+            }
+            
+            // Process form data
+            const formData = new FormData(this);
+            const formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+            
+            console.log('Form data:', formObject);
+            
+            // Save to Firebase
+            try {
+                const success = await saveFormData(formObject);
+                
+                if (success) {
+                    document.getElementById('successModal').classList.remove('hidden');
+                    this.reset();
+                    // Reset file uploads
+                    removeIdDocument();
+                    for (let i = 1; i <= 3; i++) {
+                        removeMemberIdDocument(i);
+                    }
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                showError('Submission Error', 'There was an error submitting your application. Please try again.');
+            }
+        });
+        
+        // Add dynamic premium selection based on age
+        document.querySelectorAll('[id$="Age"]').forEach(ageInput => {
+            ageInput.addEventListener('change', function() {
+                const memberNum = this.id.replace('member', '').replace('Age', '');
+                const premiumSelect = document.getElementById(`member${memberNum}Premium`);
+                const age = parseInt(this.value);
+                
+                if (!isNaN(age)) {
+                    if (age >= 65) {
+                        premiumSelect.value = '85';
+                    } else {
+                        premiumSelect.value = '55';
+                    }
+                }
+            });
+        });
+
+        // Firebase authentication state observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log("User is signed in:", user.uid);
+                // You can pre-fill user data here if needed
+            } else {
+                console.log("No user is signed in.");
+                // Redirect to login or show login modal
+                window.location.href = '/login'; // Adjust as needed
+            }
+        });
+    </script>
+</body>
+</html>

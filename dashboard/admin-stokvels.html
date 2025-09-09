@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Stokvel Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-blue-800 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-users fa-2x"></i>
+                    <h1 class="text-2xl font-bold">Stokvel Admin Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="admin-users.html" class="bg-blue-700 text-white px-4 py-2 rounded">User Management</a>
+                    <a href="admin-funerals.html" class="bg-blue-700 text-white px-4 py-2 rounded">Funeral Policies</a>
+                    <a href="admin-loans.html" class="bg-blue-700 text-white px-4 py-2 rounded">Loan Management</a>
+                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
+                <div class="loading-spinner"></div>
+                <p id="loading-text">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 hidden">
+            <strong class="font-bold" id="error-title">Error!</strong>
+            <span class="block sm:inline" id="error-details">Something went wrong.</span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <i class="fas fa-times cursor-pointer" onclick="document.getElementById('error-message').classList.add('hidden')"></i>
+            </span>
+        </div>
+
+        <!-- Stokvel Management Section -->
+        <section id="stokvels-section" class="dashboard-section active">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Stokvel Management</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-blue-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-blue-800 font-semibold">Total Stokvels</p>
+                                <p id="total-stokvels" class="text-3xl font-bold text-blue-800">0</p>
+                            </div>
+                            <i class="fas fa-users text-blue-800 text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-green-800 font-semibold">Active Stokvels</p>
+                                <p id="active-stokvels" class="text-3xl font-bold text-green-800">0</p>
+                            </div>
+                            <i class="fas fa-check-circle text-green-800 text-2xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-100 p-4 rounded-lg shadow card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-purple-800 font-semibold">Total Savings</p>
+                                <p id="total-savings" class="text-3xl font-bold text-purple-800">R0</p>
+                            </div>
+                            <i class="fas fa-wallet text-purple-800 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stokvel Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Contribution</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stokvels-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Stokvels will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Edit Stokvel Balance Modal -->
+    <div id="edit-stokvel-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3 max-h-screen overflow-y-auto">
+            <div class="border-b px-4 py-2 flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Edit Stokvel Balance</h3>
+                <button id="close-edit-stokvel-modal" class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <form id="edit-stokvel-form">
+                    <input type="hidden" id="edit-stokvel-user-id">
+                    <input type="hidden" id="edit-stokvel-id">
+                    <input type="hidden" id="edit-stokvel-current-balance">
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-stokvel-amount">
+                            Amount to <span id="amount-action">Add</span>
+                        </label>
+                        <input type="number" id="edit-stokvel-amount" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required step="0.01" min="0">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-stokvel-description">
+                            Description
+                        </label>
+                        <input type="text" id="edit-stokvel-description" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-stokvel-type">
+                            Transaction Type
+                        </label>
+                        <select id="edit-stokvel-type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                            <option value="credit">Credit (Add Funds)</option>
+                            <option value="debit">Debit (Deduct Funds)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex justify-end pt-4">
+                        <button type="button" id="cancel-edit-stokvel" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Stokvel Modal -->
+    <div id="create-stokvel-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3 max-h-screen overflow-y-auto">
+            <div class="border-b px-4 py-2 flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Create Stokvel</h3>
+                <button id="close-create-stokvel-modal" class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <form id="create-stokvel-form">
+                    <input type="hidden" id="create-stokvel-user-id">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="stokvel-name">
+                            Stokvel Name
+                        </label>
+                        <input type="text" id="stokvel-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="stokvel-balance">
+                            Initial Balance
+                        </label>
+                        <input type="number" id="stokvel-balance" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="0" step="0.01" min="0" required>
+                    </div>
+                    <div class="flex justify-end pt-4">
+                        <button type="button" id="cancel-create-stokvel" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Create Stokvel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // DOM elements
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const loadingText = document.getElementById('loading-text');
+        const errorMessage = document.getElementById('error-message');
+        const errorTitle = document.getElementById('error-title');
+        const errorDetails = document.getElementById('error-details');
+        
+        // DOM elements for stokvel editing
+        const editStokvelModal = document.getElementById('edit-stokvel-modal');
+        const closeEditStokvelModal = document.getElementById('close-edit-stokvel-modal');
+        const cancelEditStokvel = document.getElementById('cancel-edit-stokvel');
+        const editStokvelForm = document.getElementById('edit-stokvel-form');
+        
+        // DOM elements for creating stokvel
+        const createStokvelModal = document.getElementById('create-stokvel-modal');
+        const closeCreateStokvelModal = document.getElementById('close-create-stokvel-modal');
+        const cancelCreateStokvel = document.getElementById('cancel-create-stokvel');
+        const createStokvelForm = document.getElementById('create-stokvel-form');
+        
+        // Show/hide functions
+        function showLoading(message = 'Loading...') {
+            loadingText.textContent = message;
+            loadingIndicator.classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            loadingIndicator.classList.add('hidden');
+        }
+        
+        function showError(title, details) {
+            errorTitle.textContent = title;
+            errorDetails.textContent = details;
+            errorMessage.classList.remove('hidden');
+        }
+        
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return 'R' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+        
+        // Format date
+        function formatDate(date) {
+            if (!date) return 'N/A';
+            
+            if (date.toDate) {
+                date = date.toDate();
+            }
+            
+            return new Intl.DateTimeFormat('en-ZA', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(date);
+        }
+        
+        // Load stokvels data
+        function loadStokvelsData() {
+            showLoading('Loading stokvels...');
+            
+            // Get all users and their stokvels
+            db.collection('users').get().then((usersSnapshot) => {
+                const stokvelsTableBody = document.getElementById('stokvels-table-body');
+                
+                if (usersSnapshot.empty) {
+                    stokvelsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                No stokvels found.
+                            </td>
+                        </tr>
+                    `;
+                    hideLoading();
+                    return;
+                }
+                
+                let stokvels = [];
+                let totalStokvels = 0;
+                let activeStokvels = 0;
+                let totalSavings = 0;
+                
+                // Process each user's stokvels
+                const userPromises = [];
+                usersSnapshot.forEach((userDoc) => {
+                    const userData = userDoc.data();
+                    const promise = db.collection('users').doc(userDoc.id).collection('stokvels').get()
+                        .then((stokvelsSnapshot) => {
+                            stokvelsSnapshot.forEach((stokvelDoc) => {
+                                const stokvel = stokvelDoc.data();
+                                stokvel.id = stokvelDoc.id;
+                                stokvel.userId = userDoc.id;
+                                stokvel.userName = userData.fullName || userData.name || userData.email;
+                                stokvels.push(stokvel);
+                                
+                                totalStokvels++;
+                                if (stokvel.status === 'Active') activeStokvels++;
+                                totalSavings += parseFloat(stokvel.balance) || 0;
+                            });
+                        });
+                    userPromises.push(promise);
+                });
+                
+                // Wait for all stokvels to be loaded
+                Promise.all(userPromises).then(() => {
+                    // Update summary cards
+                    document.getElementById('total-stokvels').textContent = totalStokvels;
+                    document.getElementById('active-stokvels').textContent = activeStokvels;
+                    document.getElementById('total-savings').textContent = formatCurrency(totalSavings);
+                    
+                    if (stokvels.length === 0) {
+                        stokvelsTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    No stokvels found.
+                                </td>
+                        </tr>
+                        `;
+                        hideLoading();
+                        return;
+                    }
+                    
+                    // Render stokvels table
+                    let stokvelsHtml = '';
+                    stokvels.forEach((stokvel) => {
+                        stokvelsHtml += `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium">${stokvel.name}</div>
+                                    <div class="text-sm text-gray-500">${stokvel.userName}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-gray-500">${stokvel.type || 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium">${formatCurrency(stokvel.balance || 0)}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-gray-500">${stokvel.nextContribution ? formatDate(stokvel.nextContribution) : 'N/A'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${stokvel.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                        ${stokvel.status || 'N/A'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <button class="text-blue-600 hover:text-blue-900 mr-2 view-stokvel" data-user-id="${stokvel.userId}" data-id="${stokvel.id}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-green-600 hover:text-green-900 edit-stokvel" data-user-id="${stokvel.userId}" data-id="${stokvel.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    stokvelsTableBody.innerHTML = stokvelsHtml;
+                    
+                    // Add event listeners for stokvel edit buttons
+                    setupStokvelEditButtons();
+                    
+                    hideLoading();
+                }).catch((error) => {
+                    showError('Data Error', 'Failed to load stokvels. Please refresh the page.');
+                    console.error('Error loading stokvels:', error);
+                    hideLoading();
+                });
+            }).catch((error) => {
+                showError('Data Error', 'Failed to load users. Please refresh the page.');
+                console.error('Error loading users:', error);
+                hideLoading();
+            });
+        }
+        
+        // Setup stokvel edit button functionality
+        function setupStokvelEditButtons() {
+            // Event delegation for stokvel edit buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('edit-stokvel') || 
+                    (e.target.parentElement && e.target.parentElement.classList.contains('edit-stokvel'))) {
+                    
+                    const button = e.target.classList.contains('edit-stokvel') ? e.target : e.target.parentElement;
+                    const userId = button.getAttribute('data-user-id');
+                    const stokvelId = button.getAttribute('data-id');
+                    
+                    openEditStokvelModal(userId, stokvelId);
+                }
+            });
+        }
+        
+        // Function to open edit stokvel modal
+        function openEditStokvelModal(userId, stokvelId) {
+            showLoading('Loading stokvel details...');
+            
+            db.collection('users').doc(userId).collection('stokvels').doc(stokvelId).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const stokvel = doc.data();
+                        
+                        // Populate modal fields
+                        document.getElementById('edit-stokvel-user-id').value = userId;
+                        document.getElementById('edit-stokvel-id').value = stokvelId;
+                        document.getElementById('edit-stokvel-current-balance').value = stokvel.balance || 0;
+                        document.getElementById('edit-stokvel-amount').value = '';
+                        document.getElementById('edit-stokvel-description').value = '';
+                        
+                        // Add event listener for transaction type change
+                        document.getElementById('edit-stokvel-type').addEventListener('change', function() {
+                            const amountAction = document.getElementById('amount-action');
+                            if (this.value === 'debit') {
+                                amountAction.textContent = 'Deduct';
+                            } else {
+                                amountAction.textContent = 'Add';
+                            }
+                        });
+                        
+                        editStokvelModal.classList.remove('hidden');
+                        hideLoading();
+                    } else {
+                        hideLoading();
+                        showError('Error', 'Stokvel not found.');
+                    }
+                })
+                .catch((error) => {
+                    hideLoading();
+                    showError('Data Error', 'Failed to load stokvel details.');
+                    console.error('Error loading stokvel:', error);
+                });
+        }
+
+        // Edit stokvel form submission
+        editStokvelForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('edit-stokvel-user-id').value;
+            const stokvelId = document.getElementById('edit-stokvel-id').value;
+            const currentBalance = parseFloat(document.getElementById('edit-stokvel-current-balance').value);
+            const amount = parseFloat(document.getElementById('edit-stokvel-amount').value);
+            const description = document.getElementById('edit-stokvel-description').value;
+            const type = document.getElementById('edit-stokvel-type').value;
+            
+            if (!amount || amount <= 0) {
+                showError('Validation Error', 'Please enter a valid amount.');
+                return;
+            }
+            
+            if (!description) {
+                showError('Validation Error', 'Please enter a description.');
+                return;
+            }
+            
+            showLoading('Updating stokvel balance...');
+            
+            // Calculate new balance based on type
+            let newBalance;
+            if (type === 'credit') {
+                newBalance = currentBalance + amount;
+            } else {
+                newBalance = currentBalance - amount;
+                if (newBalance < 0) {
+                    hideLoading();
+                    showError('Validation Error', 'Insufficient balance for this debit.');
+                    return;
+                }
+            }
+            
+            // Update stokvel balance
+            db.collection('users').doc(userId).collection('stokvels').doc(stokvelId).update({
+                balance: newBalance
+            })
+            .then(() => {
+                // Create transaction record
+                const transactionData = {
+                    amount: amount,
+                    description: description,
+                    type: type,
+                    date: firebase.firestore.FieldValue.serverTimestamp(),
+                    stokvelId: stokvelId
+                };
+                
+                return db.collection('users').doc(userId).collection('transactions').add(transactionData);
+            })
+            .then(() => {
+                hideLoading();
+                editStokvelModal.classList.add('hidden');
+                editStokvelForm.reset();
+                loadStokvelsData(); // Refresh the stokvels list
+            })
+            .catch((error) => {
+                hideLoading();
+                showError('Update Error', 'Failed to update stokvel balance.');
+                console.error('Error updating stokvel:', error);
+            });
+        });
+
+        // Create stokvel modal functionality
+        closeCreateStokvelModal.addEventListener('click', function() {
+            createStokvelModal.classList.add('hidden');
+        });
+
+        cancelCreateStokvel.addEventListener('click', function() {
+            createStokvelModal.classList.add('hidden');
+        });
+
+        // Create stokvel form submission
+        createStokvelForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('create-stokvel-user-id').value;
+            const name = document.getElementById('stokvel-name').value;
+            const balance = parseFloat(document.getElementById('stokvel-balance').value);
+            
+            if (!name) {
+                showError('Validation Error', 'Please enter a stokvel name.');
+                return;
+            }
+            
+            if (isNaN(balance) || balance < 0) {
+                showError('Validation Error', 'Please enter a valid balance.');
+                return;
+            }
+            
+            showLoading('Creating stokvel...');
+            
+            // Calculate next contribution date (one month from now)
+            const nextContribution = new Date();
+            nextContribution.setMonth(nextContribution.getMonth() + 1);
+            
+            // Create stokvel in the user's stokvels subcollection
+            db.collection('users').doc(userId).collection('stokvels').add({
+                name: name,
+                balance: balance,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                nextContribution: nextContribution,
+                type: "Monthly",
+                status: "Active"
+            })
+            .then(() => {
+                hideLoading();
+                createStokvelModal.classList.add('hidden');
+                createStokvelForm.reset();
+                loadStokvelsData(); // Refresh the stokvels list
+            })
+            .catch((error) => {
+                hideLoading();
+                showError('Stokvel Creation Error', error.message);
+                console.error('Error creating stokvel:', error);
+            });
+        });
+        
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            auth.signOut().then(() => {
+                window.location.href = '../index.html';
+            }).catch((error) => {
+                showError('Logout Error', error.message);
+                console.error('Error signing out:', error);
+            });
+        });
+        
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners for the Edit Stokvel Balance modal close and cancel buttons
+            closeEditStokvelModal.addEventListener('click', function() {
+                editStokvelModal.classList.add('hidden');
+            });
+            
+            cancelEditStokvel.addEventListener('click', function() {
+                editStokvelModal.classList.add('hidden');
+            });
+            
+            // Close modal when clicking outside of it
+            editStokvelModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+            
+            // Check if user is authenticated and is an admin
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Check if user is admin
+                    db.collection('users').doc(user.uid).get()
+                        .then((doc) => {
+                            if (doc.exists && doc.data().role === 'admin') {
+                                // User is admin, load initial data
+                                loadStokvelsData();
+                            } else {
+                                // User is not admin, redirect
+                                window.location.href = '../index.html';
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error checking user role:', error);
+                            window.location.href = '../index.html';
+                        });
+                } else {
+                    // User is not logged in, redirect to login
+                    window.location.href = '../login.html';
+                }
+            });
+            
+        });
+    </script>
+</body>
+</html>
