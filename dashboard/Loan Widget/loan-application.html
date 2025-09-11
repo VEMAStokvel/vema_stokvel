@@ -94,6 +94,14 @@
         .progress-connector.completed {
             background-color: #10b981;
         }
+        .input-error {
+            border-color: #e53e3e;
+        }
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -162,28 +170,33 @@
                         <!-- Application Section -->
                         <div class="space-y-6 md:space-y-8">
                             <!-- Personal Information Section -->
-                            <div id="personal-info-section">
+                            <div id="personal-info-section" class="section">
                                 <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Personal Information</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Full Name*</label>
                                         <input type="text" id="full-name" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="full-name-error" class="error-message hidden">Please enter your full name</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">ID Number*</label>
                                         <input type="text" id="id-number" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="id-number-error" class="error-message hidden">Please enter your ID number</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Phone Number*</label>
                                         <input type="tel" id="phone-number" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="phone-number-error" class="error-message hidden">Please enter a valid phone number</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Email Address*</label>
                                         <input type="email" id="email-address" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="email-address-error" class="error-message hidden">Please enter a valid email address</div>
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-gray-700 text-sm mb-2">Residential Address*</label>
                                         <textarea id="residential-address" class="w-full p-2 border rounded text-sm md:text-base" rows="2" required></textarea>
+                                        <div id="residential-address-error" class="error-message hidden">Please enter your residential address</div>
                                     </div>
                                 </div>
                                 <div class="mt-6 flex justify-end">
@@ -192,36 +205,43 @@
                             </div>
 
                             <!-- Employment Section (initially hidden) -->
-                            <div id="employment-section" class="hidden">
+                            <div id="employment-section" class="section hidden">
                                 <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Employment Details</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Employer Name*</label>
                                         <input type="text" id="employer-name" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="employer-name-error" class="error-message hidden">Please enter your employer's name</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Occupation/Job Title*</label>
-                                        <input type="text" id="job-title" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <input type="text" id="job-title" class="w-full p-2 border rounded极text-sm md:text-base" required>
+                                        <div id="job-title-error" class="error-message hidden">Please enter your job title</div>
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-gray-700 text-sm mb-2">Work Address*</label>
                                         <textarea id="work-address" class="w-full p-2 border rounded text-sm md:text-base" rows="2" required></textarea>
+                                        <div id="work-address-error" class="error-message hidden">Please enter your work address</div>
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm mb-2">Work Contact Number*</label>
+                                        <label class="block text-gray-700 text-sm mb极2">Work Contact Number*</label>
                                         <input type="tel" id="work-contact" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="work-contact-error" class="error-message hidden">Please enter a valid work contact number</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Employment Start Date*</label>
                                         <input type="date" id="employment-date" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="employment-date-error" class="error-message hidden">Please select your employment start date</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Gross Monthly Salary (R)*</label>
                                         <input type="number" id="gross-salary" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="gross-salary-error" class="error-message hidden">Please enter your gross monthly salary</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Net Monthly Salary (R)*</label>
                                         <input type="number" id="net-salary" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="net-salary-error" class="error-message hidden">Please enter your net monthly salary</div>
                                     </div>
                                 </div>
                                 <div class="mt-6 flex justify-between">
@@ -231,7 +251,7 @@
                             </div>
 
                             <!-- Loan Details Section (initially hidden) -->
-                            <div id="loan-details-section" class="hidden">
+                            <div id="loan-details-section" class="section hidden">
                                 <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Loan Details</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -244,9 +264,11 @@
                                             <option value="3000">R3,000</option>
                                             <option value="other">Other amount</option>
                                         </select>
+                                        <div id="loan-amount-error" class="error-message hidden">Please select a loan amount</div>
                                         <div id="custom-amount-container" class="mt-2 hidden">
                                             <label class="block text-gray-700 text-sm mb-2">Custom Amount (R)*</label>
                                             <input type="number" id="custom-amount" class="w-full p-2 border rounded text-sm md:text-base">
+                                            <div id="custom-amount-error" class="error-message hidden">Please enter a custom amount</div>
                                         </div>
                                     </div>
                                     <div>
@@ -257,6 +279,7 @@
                                             <option value="2">2 months</option>
                                             <option value="3">3 months</option>
                                         </select>
+                                        <div id="loan-term-error" class="error-message hidden">Please select a repayment term</div>
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-gray-700 text-sm mb-2">Purpose of Loan*</label>
@@ -268,6 +291,7 @@
                                             <option value="home">Home Improvement</option>
                                             <option value="other">Other</option>
                                         </select>
+                                        <div id="loan-purpose-error" class="error-message hidden">Please select a loan purpose</div>
                                     </div>
                                 </div>
 
@@ -280,22 +304,27 @@
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Rent/Housing (R)*</label>
                                         <input type="number" id="rent" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="rent-error" class="error-message hidden">Please enter your rent/housing amount</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Food & Groceries (R)*</label>
                                         <input type="number" id="food" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="food-error" class="error-message hidden">Please enter your food expenses</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Transport (R)*</label>
                                         <input type="number" id="transport" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="transport-error" class="error-message hidden">Please enter your transport expenses</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Existing Loan Repayments (R)*</label>
                                         <input type="number" id="existing-loans" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="existing-loans-error" class="error-message hidden">Please enter your existing loan payments</div>
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm mb-2">Other Monthly Expenses (极)*</label>
+                                        <label class="block text-gray-700 text-sm mb-2">Other Monthly Expenses (R)*</label>
                                         <input type="number" id="other-expenses" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="other-expenses-error" class="error-message hidden">Please enter your other expenses</div>
                                     </div>
                                 </div>
                                 <div class="mt-6 flex justify-between">
@@ -305,23 +334,26 @@
                             </div>
 
                             <!-- Documents Section (initially hidden) -->
-                            <div id="documents-section" class="hidden">
+                            <div id="documents-section" class="section hidden">
                                 <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Required Documents</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Copy of ID*</label>
                                         <input type="file" id="id-copy" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
                                         <p class="text-xs text-gray-500 mt-1">Upload a clear copy of your ID document</p>
+                                        <div id="id-copy-error" class="error-message hidden">Please upload a copy of your ID</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Latest Payslip*</label>
-                                        <input type="file" id="payslip" class="w-full p-2 border rounded text-xs极:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <input type="file" id="payslip" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
                                         <p class="text-xs text-gray-500 mt-1">Upload your most recent payslip</p>
+                                        <div id="payslip-error" class="error-message hidden">Please upload your latest payslip</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">3-Month Bank Statement*</label>
                                         <input type="file" id="bank-statement" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
-                                        <p class="text-xs text-gray-500极-1">Upload your last 3 months bank statements</p>
+                                        <p class="text-xs text-gray-500 mt-1">Upload your last 3 months bank statements</p>
+                                        <div id="bank-statement-error" class="error-message hidden">Please upload your bank statements</div>
                                     </div>
                                     <div>
                                         <label class="block text-gray-700 text-sm mb-2">Employment Confirmation Letter</label>
@@ -338,6 +370,7 @@
                                             I agree to the <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a> and confirm that all information provided is accurate. I understand that false information may result in my application being declined.
                                         </label>
                                     </div>
+                                    <div id="terms-agreement-error" class="error-message hidden">You must agree to the terms and conditions</div>
                                 </div>
 
                                 <div class="mt-6 flex justify-between">
@@ -361,7 +394,7 @@
                 </svg>
             </div>
             <h3 class="text-xl font-semibold mb-2">Application Submitted!</h3>
-            <p class="text-gray-600 mb-6">Your loan application has been received and is being processed. You'll receive a confirmation email shortly.</p>
+            <p class="text-gray-600 mb-6">Your loan application has been received and is being processed. futher information will be communicated to you via email or whatsapp.</p>
             <button id="close-success-modal" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full md:w-auto">Back to Loans</button>
         </div>
     </div>
@@ -375,7 +408,7 @@
             projectId: "vema-7606a",
             storageBucket: "vema-7606a.firebasestorage.app",
             messagingSenderId: "127492940070",
-            appId极: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
             measurementId: "G-2E6VC65Q3K"
         };
         
@@ -396,7 +429,7 @@
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.className = `toast ${type} ${type === 'error' ? 'error' : 'success'}`;
+            toast.className = `toast ${type === 'error' ? 'error' : 'success'}`;
             toast.classList.remove('hidden');
             toast.classList.add('show');
             
@@ -405,22 +438,6 @@
                 setTimeout(() => toast.classList.add('hidden'), 300);
             }, 3000);
         }
-
-        // Mobile menu toggle
-        document.getElementById('mobile-menu-button').addEventListener('click', function() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuButton = document.getElementById('mobile-menu-button');
-            
-            if (!sidebar.contains(event.target) && !menuButton.contains(event.target) && window.innerWidth < 768) {
-                sidebar.classList.add('-translate-x-full');
-            }
-        });
 
         // Format currency function
         function formatCurrency(amount) {
@@ -500,13 +517,61 @@
             }
         }
 
+        // Validate a section
+        function validateSection(sectionId) {
+            const inputs = document.querySelectorAll(`#${sectionId} [required]`);
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                // Skip validation for hidden elements
+                if (input.offsetParent === null) return;
+                
+                if (!input.value.trim()) {
+                    input.classList.add('input-error');
+                    const errorElement = document.getElementById(`${input.id}-error`);
+                    if (errorElement) errorElement.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    input.classList.remove('input-error');
+                    const errorElement = document.getElementById(`${input.id}-error`);
+                    if (errorElement) errorElement.classList.add('hidden');
+                }
+                
+                // Special validation for email
+                if (input.type === 'email' && input.value.trim()) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(input.value)) {
+                        input.classList.add('input-error');
+                        const errorElement = document.getElementById(`${input.id}-error`);
+                        if (errorElement) {
+                            errorElement.textContent = 'Please enter a valid email address';
+                            errorElement.classList.remove('hidden');
+                        }
+                        isValid = false;
+                    }
+                }
+                
+                // Special validation for custom amount
+                if (input.id === 'custom-amount' && document.getElementById('loan-amount').value === 'other') {
+                    if (!input.value.trim() || parseFloat(input.value) <= 0) {
+                        input.classList.add('input-error');
+                        const errorElement = document.getElementById(`${input.id}-error`);
+                        if (errorElement) errorElement.classList.remove('hidden');
+                        isValid = false;
+                    }
+                }
+            });
+
+            return isValid;
+        }
+
         // Submit loan application
         async function submitLoanApplication(formData) {
             try {
                 // Show loading state
                 const submitBtn = document.querySelector('#loan-application-form button[type="submit"]');
                 const originalText = submitBtn.textContent;
-                submitBtn.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r极="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H极c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...</span>';
+                submitBtn.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...</span>';
                 submitBtn.disabled = true;
                 
                 // Generate random ID for the loan
@@ -560,8 +625,6 @@
             }
         }
 
-
-        
         // Initialize and set up event listeners
         document.addEventListener('DOMContentLoaded', function() {
             // Check authentication state
@@ -603,7 +666,7 @@
             // Section navigation
             document.querySelectorAll('.next-section').forEach(button => {
                 button.addEventListener('click', function() {
-                    const currentSectionElement = this.closest('div[id$="-section"]');
+                    const currentSectionElement = this.closest('.section');
                     const nextSectionId = this.getAttribute('data-next');
                     
                     // Validate current section before proceeding
@@ -617,13 +680,18 @@
                         // Update progress
                         updateProgressSteps(nextSectionId);
                         updateMobileProgress(nextSectionId);
+                        
+                        // Scroll to top of section
+                        document.getElementById(nextSectionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        showToast('Please fill in all required fields before proceeding.', 'error');
                     }
                 });
             });
 
             document.querySelectorAll('.prev-section').forEach(button => {
                 button.addEventListener('click', function() {
-                    const currentSectionElement = this.closest('div[id$="-section"]');
+                    const currentSectionElement = this.closest('.section');
                     const prevSectionId = this.getAttribute('data-prev');
                     
                     currentSectionElement.classList.add('hidden');
@@ -638,32 +706,30 @@
                 });
             });
 
-            function validateSection(sectionId) {
-                const inputs = document.querySelectorAll(`#${sectionId} [required]`);
-                let isValid = true;
-                
-                inputs.forEach(input => {
-                    if (!input.value.trim()) {
-                        input.classList.add('border-red-500');
-                        isValid = false;
-                    } else {
-                        input.classList.remove('border-red-500');
-                    }
-                });
-
-                if (!isValid) {
-                    showToast('Please fill in all required fields before proceeding.', 'error');
-                }
-
-                return isValid;
-            }
-
             // Form submission
             document.getElementById('loan-application-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
                 if (!document.getElementById('terms-agreement').checked) {
                     showToast('Please agree to the terms and conditions before submitting.', 'error');
+                    document.getElementById('terms-agreement-error').classList.remove('hidden');
+                    return;
+                } else {
+                    document.getElementById('terms-agreement-error').classList.add('hidden');
+                }
+
+                // Validate all sections before submitting
+                let allSectionsValid = true;
+                const sections = document.querySelectorAll('.section');
+                
+                for (const section of sections) {
+                    if (!validateSection(section.id)) {
+                        allSectionsValid = false;
+                    }
+                }
+                
+                if (!allSectionsValid) {
+                    showToast('Please fill in all required fields before submitting.', 'error');
                     return;
                 }
 
@@ -679,17 +745,17 @@
                     workAddress: document.getElementById('work-address').value,
                     workContact: document.getElementById('work-contact').value,
                     employmentDate: document.getElementById('employment-date').value,
-                    grossSalary: document.getElementById('gross-salary').value,
-                    netSalary: document.getElementById('net-salary').value,
-                    otherIncome: document.getElementById('other-income').value || 0,
-                    rent: document.getElementById('rent').value || 0,
-                    food: document.getElementById('food').value || 0,
-                    transport: document.getElementById('transport').value || 0,
-                    existingLoans: document.getElementById('existing-loans').value || 0,
-                    otherExpenses: document.getElementById('other-expenses').value || 0,
+                    grossSalary: parseFloat(document.getElementById('gross-salary').value),
+                    netSalary: parseFloat(document.getElementById('net-salary').value),
+                    otherIncome: parseFloat(document.getElementById('other-income').value) || 0,
+                    rent: parseFloat(document.getElementById('rent').value) || 0,
+                    food: parseFloat(document.getElementById('food').value) || 0,
+                    transport: parseFloat(document.getElementById('transport').value) || 0,
+                    existingLoans: parseFloat(document.getElementById('existing-loans').value) || 0,
+                    otherExpenses: parseFloat(document.getElementById('other-expenses').value) || 0,
                     loanAmount: document.getElementById('loan-amount').value === 'other' ? 
-                                document.getElementById('custom-amount').value : 
-                                document.getElementById('loan-amount').value,
+                                parseFloat(document.getElementById('custom-amount').value) : 
+                                parseFloat(document.getElementById('loan-amount').value),
                     loanTerm: document.getElementById('loan-term').value,
                     purpose: document.getElementById('loan-purpose').value,
                     termsAgreed: document.getElementById('terms-agreement').checked
@@ -704,13 +770,11 @@
                 // Submit application
                 await submitLoanApplication(formData);
             });
-
-
             
             // Close success modal
             document.getElementById('close-success-modal').addEventListener('click', function() {
                 document.getElementById('success-modal').classList.add('hidden');
-                window.location.href = 'loans.html';
+                window.location.href = '/dashboard/loans.html';
             });
 
             // Initialize progress

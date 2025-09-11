@@ -1285,15 +1285,17 @@
         // WhatsApp and Email functions for proof sharing
         function sendWhatsAppConfirmation() {
             const amount = document.getElementById('contribution-amount').value;
-            
+        
             if (!amount) {
                 alert('Please enter the amount you deposited.');
                 return;
             }
-            
+        
+            const phoneNumber = "27692330914"; // Replace with your WhatsApp number
             const message = `Hello, I have deposited R${amount} for my Funeral Cover. Here is my proof of payment.`;
             const encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        
+            window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
         }
 
         function sendEmailConfirmation() {
@@ -1307,7 +1309,7 @@
             const subject = 'Funeral Cover Deposit Proof';
             const body = `Hello, I have deposited R${amount} for my Funeral Cover. Please find my proof of payment attached.`;
             
-            window.open(`mailto:support@vema.co.za?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+            window.open(`mailto:inquiries@vema24.co.za?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
         }
 
         // Customer support functions
@@ -1317,11 +1319,12 @@
             window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
         }
 
-        function contactSupportEmail() {
-            const subject = 'Funeral Cover Support Request';
-            const body = 'Hello, I need assistance with my Funeral Cover. Please contact me.';
-            
-            window.open(`mailto:support@vema.co.za?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+        function contactSupportWhatsApp() {
+            const phoneNumber = "27692330914"; // Replace with your WhatsApp number
+            const message = 'Hello, I need assistance with my Funeral Cover.';
+            const encodedMessage = encodeURIComponent(message);
+        
+            window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
         }
     </script>
 </body>
