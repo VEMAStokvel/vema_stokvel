@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Loan Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <style>
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.error {
+            background-color: #e53e3e;
+        }
+        .toast.success {
+            background-color: #38a169;
+        }
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .step-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .step-active {
+            background-color: #2563eb;
+            color: white;
+        }
+        .step-inactive {
+            background-color: #e5e7eb;
+            color: #6b7280;
+        }
+        .step-completed {
+            background-color: #10b981;
+            color: white;
+        }
+        .progress-connector {
+            flex: 1;
+            height: 2px;
+            margin: 0 10px;
+            background-color: #e5e7eb;
+        }
+        .progress-connector.active {
+            background-color: #2563eb;
+        }
+        .progress-connector.completed {
+            background-color: #10b981;
+        }
+        .input-error {
+            border-color: #e53e3e;
+        }
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Main Container -->
+    <div class="flex flex-col md:flex-row min-h-screen">
+        
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Bar - Made Sticky -->
+            <header class="sticky-header bg-white shadow-sm p-4 flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-semibold text-gray-800 ml-2 md:ml-0">Loan Application</h1>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-auto">
+                <!-- Main Content -->
+                <main class="p-4 md:p-6">
+                    <form id="loan-application-form" class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+                        <div class="mb-6 md:mb-8">
+                            <h2 class="text-lg md:text-xl font-semibold mb-2">Loan Application Form</h2>
+                            <p class="text-gray-600 text-sm md:text-base">Please fill in all required fields to apply for a loan.</p>
+                        </div>
+
+                        <!-- Progress Steps - Mobile (simplified) -->
+                        <div class="md:hidden mb-6">
+                            <div class="flex items-center justify-center mb-2">
+                                <div class="text-sm font-medium text-gray-700">
+                                    Step <span id="current-step-mobile">1</span> of 4
+                                </div>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div id="mobile-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 25%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Steps - Desktop - Improved -->
+                        <div class="hidden md:flex mb-8 items-center">
+                            <div class="flex items-center">
+                                <div id="step-1-circle" class="step-circle step-active">1</div>
+                                <div class="text-sm font-medium text-gray-700">Personal Info</div>
+                            </div>
+                            <div id="step-1-connector" class="progress-connector"></div>
+                            <div class="flex items-center">
+                                <div id="step-2-circle" class="step-circle step-inactive">2</div>
+                                <div class="text-sm font-medium text-gray-500">Employment</div>
+                            </div>
+                            <div id="step-2-connector" class="progress-connector"></div>
+                            <div class="flex items-center">
+                                <div id="step-3-circle" class="step-circle step-inactive">3</div>
+                                <div class="text-sm font-medium text-gray-500">Loan Details</div>
+                            </div>
+                            <div id="step-3-connector" class="progress-connector"></div>
+                            <div class="flex items-center">
+                                <div id="step-4-circle" class="step-circle step-inactive">4</div>
+                                <div class="text-sm font-medium text-gray-500">Documents</div>
+                            </div>
+                        </div>
+
+                        <!-- Application Section -->
+                        <div class="space-y-6 md:space-y-8">
+                            <!-- Personal Information Section -->
+                            <div id="personal-info-section" class="section">
+                                <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Personal Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Full Name*</label>
+                                        <input type="text" id="full-name" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="full-name-error" class="error-message hidden">Please enter your full name</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">ID Number*</label>
+                                        <input type="text" id="id-number" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="id-number-error" class="error-message hidden">Please enter your ID number</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Phone Number*</label>
+                                        <input type="tel" id="phone-number" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="phone-number-error" class="error-message hidden">Please enter a valid phone number</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Email Address*</label>
+                                        <input type="email" id="email-address" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="email-address-error" class="error-message hidden">Please enter a valid email address</div>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-gray-700 text-sm mb-2">Residential Address*</label>
+                                        <textarea id="residential-address" class="w-full p-2 border rounded text-sm md:text-base" rows="2" required></textarea>
+                                        <div id="residential-address-error" class="error-message hidden">Please enter your residential address</div>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex justify-end">
+                                    <button type="button" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 next-section" data-next="employment-section">Next: Employment Details</button>
+                                </div>
+                            </div>
+
+                            <!-- Employment Section (initially hidden) -->
+                            <div id="employment-section" class="section hidden">
+                                <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Employment Details</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Employer Name*</label>
+                                        <input type="text" id="employer-name" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="employer-name-error" class="error-message hidden">Please enter your employer's name</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Occupation/Job Title*</label>
+                                        <input type="text" id="job-title" class="w-full p-2 border rounded极text-sm md:text-base" required>
+                                        <div id="job-title-error" class="error-message hidden">Please enter your job title</div>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-gray-700 text-sm mb-2">Work Address*</label>
+                                        <textarea id="work-address" class="w-full p-2 border rounded text-sm md:text-base" rows="2" required></textarea>
+                                        <div id="work-address-error" class="error-message hidden">Please enter your work address</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb极2">Work Contact Number*</label>
+                                        <input type="tel" id="work-contact" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="work-contact-error" class="error-message hidden">Please enter a valid work contact number</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Employment Start Date*</label>
+                                        <input type="date" id="employment-date" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="employment-date-error" class="error-message hidden">Please select your employment start date</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Gross Monthly Salary (R)*</label>
+                                        <input type="number" id="gross-salary" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="gross-salary-error" class="error-message hidden">Please enter your gross monthly salary</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Net Monthly Salary (R)*</label>
+                                        <input type="number" id="net-salary" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                        <div id="net-salary-error" class="error-message hidden">Please enter your net monthly salary</div>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex justify-between">
+                                    <button type="button" class="px-4 py-2 md:px-6 md:py-2 border rounded text-gray-700 hover:bg-gray-100 prev-section" data-prev="personal-info-section">Back</button>
+                                    <button type="button" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 next-section" data-next="loan-details-section">Next: Loan Details</button>
+                                </div>
+                            </div>
+
+                            <!-- Loan Details Section (initially hidden) -->
+                            <div id="loan-details-section" class="section hidden">
+                                <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Loan Details</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Loan Amount Requested*</label>
+                                        <select id="loan-amount" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                            <option value="">Select amount</option>
+                                            <option value="500">R500</option>
+                                            <option value="1000">R1,000</option>
+                                            <option value="2000">R2,000</option>
+                                            <option value="3000">R3,000</option>
+                                            <option value="other">Other amount</option>
+                                        </select>
+                                        <div id="loan-amount-error" class="error-message hidden">Please select a loan amount</div>
+                                        <div id="custom-amount-container" class="mt-2 hidden">
+                                            <label class="block text-gray-700 text-sm mb-2">Custom Amount (R)*</label>
+                                            <input type="number" id="custom-amount" class="w-full p-2 border rounded text-sm md:text-base">
+                                            <div id="custom-amount-error" class="error-message hidden">Please enter a custom amount</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Repayment Term*</label>
+                                        <select id="loan-term" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                            <option value="">Select term</option>
+                                            <option value="1">1 month</option>
+                                            <option value="2">2 months</option>
+                                            <option value="3">3 months</option>
+                                        </select>
+                                        <div id="loan-term-error" class="error-message hidden">Please select a repayment term</div>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-gray-700 text-sm mb-2">Purpose of Loan*</label>
+                                        <select id="loan-purpose" class="w-full p-2 border rounded text-sm md:text-base" required>
+                                            <option value="">Select purpose</option>
+                                            <option value="emergency">Emergency</option>
+                                            <option value="education">Education</option>
+                                            <option value="business">Business</option>
+                                            <option value="home">Home Improvement</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <div id="loan-purpose-error" class="error-message hidden">Please select a loan purpose</div>
+                                    </div>
+                                </div>
+
+                                <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4 mt-6">Monthly Expenses</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Other Income Sources (R)</label>
+                                        <input type="number" id="other-income" class="w-full p-2 border rounded text-sm md:text-base" value="0">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Rent/Housing (R)*</label>
+                                        <input type="number" id="rent" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="rent-error" class="error-message hidden">Please enter your rent/housing amount</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Food & Groceries (R)*</label>
+                                        <input type="number" id="food" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="food-error" class="error-message hidden">Please enter your food expenses</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Transport (R)*</label>
+                                        <input type="number" id="transport" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="transport-error" class="error-message hidden">Please enter your transport expenses</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Existing Loan Repayments (R)*</label>
+                                        <input type="number" id="existing-loans" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="existing-loans-error" class="error-message hidden">Please enter your existing loan payments</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Other Monthly Expenses (R)*</label>
+                                        <input type="number" id="other-expenses" class="w-full p-2 border rounded text-sm md:text-base" value="0" required>
+                                        <div id="other-expenses-error" class="error-message hidden">Please enter your other expenses</div>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex justify-between">
+                                    <button type="button" class="px-4 py-2 md:px-6 md:py-2 border rounded text-gray-700 hover:bg-gray-100 prev-section" data-prev="employment-section">Back</button>
+                                    <button type="button" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700 next-section" data-next="documents-section">Next: Documents</button>
+                                </div>
+                            </div>
+
+                            <!-- Documents Section (initially hidden) -->
+                            <div id="documents-section" class="section hidden">
+                                <h3 class="text-md md:text-lg font-medium border-b pb-2 mb-4">Required Documents</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Copy of ID*</label>
+                                        <input type="file" id="id-copy" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <p class="text-xs text-gray-500 mt-1">Upload a clear copy of your ID document</p>
+                                        <div id="id-copy-error" class="error-message hidden">Please upload a copy of your ID</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Latest Payslip*</label>
+                                        <input type="file" id="payslip" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <p class="text-xs text-gray-500 mt-1">Upload your most recent payslip</p>
+                                        <div id="payslip-error" class="error-message hidden">Please upload your latest payslip</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">3-Month Bank Statement*</label>
+                                        <input type="file" id="bank-statement" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <p class="text-xs text-gray-500 mt-1">Upload your last 3 months bank statements</p>
+                                        <div id="bank-statement-error" class="error-message hidden">Please upload your bank statements</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm mb-2">Employment Confirmation Letter</label>
+                                        <input type="file" id="employment-confirmation" class="w-full p-2 border rounded text-xs md:text-sm" accept=".pdf,.jpg,.jpeg,.png">
+                                        <p class="text-xs text-gray-500 mt-1">Optional: Upload employment confirmation letter</p>
+                                    </div>
+                                </div>
+
+                                <!-- Terms of Use -->
+                                <div class="mt-6 p-4 bg-gray-50 rounded">
+                                    <div class="flex items-start">
+                                        <input type="checkbox" id="terms-agreement" class="mt-1 mr-2" required>
+                                        <label for="terms-agreement" class="text-xs md:text-sm text-gray-700">
+                                            I agree to the <a href="#" class="text-blue-600 hover:underline">Terms of Use</a> and confirm that all information provided is accurate. I understand that false information may result in my application being declined.
+                                        </label>
+                                    </div>
+                                    <div id="terms-agreement-error" class="error-message hidden">You must agree to the terms of use</div>
+                                </div>
+
+                                <div class="mt-6 flex justify-between">
+                                    <button type="button" class="px-4 py-2 md:px-6 md:py-2 border rounded text-gray-700 hover:bg-gray-100 prev-section" data-prev="loan-details-section">Back</button>
+                                    <button type="submit" class="px-4 py-2 md:px-6 md:py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit Application</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Application Submitted!</h3>
+            <p class="text-gray-600 mb-6">Your loan application has been received and is being processed. futher information will be communicated to you via email or whatsapp.</p>
+            <button id="close-success-modal" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full md:w-auto">Back to Loans</button>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+    </script>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let loanApplicationData = null;
+        let currentSection = 'personal-info-section';
+        
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type === 'error' ? 'error' : 'success'}`;
+            toast.classList.remove('hidden');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        // Format currency function
+        function formatCurrency(amount) {
+            return 'R' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // Upload file to Firebase Storage
+        async function uploadFile(file, path) {
+            try {
+                const storageRef = storage.ref();
+                const fileRef = storageRef.child(path);
+                const snapshot = await fileRef.put(file);
+                const downloadURL = await snapshot.ref.getDownloadURL();
+                return downloadURL;
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                throw error;
+            }
+        }
+
+        // Update progress steps
+        function updateProgressSteps(sectionId) {
+            // Reset all steps
+            document.querySelectorAll('.step-circle').forEach(circle => {
+                circle.classList.remove('step-active', 'step-completed');
+                circle.classList.add('step-inactive');
+            });
+            
+            document.querySelectorAll('.progress-connector').forEach(connector => {
+                connector.classList.remove('active', 'completed');
+            });
+            
+            // Update based on current section
+            const sectionSteps = {
+                'personal-info-section': 1,
+                'employment-section': 2,
+                'loan-details-section': 3,
+                'documents-section': 4
+            };
+            
+            const currentStep = sectionSteps[sectionId];
+            
+            for (let i = 1; i <= 4; i++) {
+                const circle = document.getElementById(`step-${i}-circle`);
+                const connector = document.getElementById(`step-${i}-connector`);
+                
+                if (i < currentStep) {
+                    circle.classList.remove('step-inactive', 'step-active');
+                    circle.classList.add('step-completed');
+                    if (connector) connector.classList.add('completed');
+                } else if (i === currentStep) {
+                    circle.classList.remove('step-inactive', 'step-completed');
+                    circle.classList.add('step-active');
+                    if (connector && i > 1) {
+                        document.getElementById(`step-${i-1}-connector`).classList.add('completed');
+                    }
+                } else {
+                    circle.classList.remove('step-active', 'step-completed');
+                    circle.classList.add('step-inactive');
+                }
+            }
+        }
+
+        // Update mobile progress
+        function updateMobileProgress(sectionId) {
+            if (window.innerWidth < 768) {
+                const stepMap = {
+                    'personal-info-section': { step: 1, width: '25%' },
+                    'employment-section': { step: 2, width: '50%' },
+                    'loan-details-section': { step: 3, width: '75%' },
+                    'documents-section': { step: 4, width: '100%' }
+                };
+                
+                const currentStep = stepMap[sectionId];
+                document.getElementById('current-step-mobile').textContent = currentStep.step;
+                document.getElementById('mobile-progress-bar').style.width = currentStep.width;
+            }
+        }
+
+        // Validate a section
+        function validateSection(sectionId) {
+            const inputs = document.querySelectorAll(`#${sectionId} [required]`);
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                // Skip validation for hidden elements
+                if (input.offsetParent === null) return;
+                
+                if (!input.value.trim()) {
+                    input.classList.add('input-error');
+                    const errorElement = document.getElementById(`${input.id}-error`);
+                    if (errorElement) errorElement.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    input.classList.remove('input-error');
+                    const errorElement = document.getElementById(`${input.id}-error`);
+                    if (errorElement) errorElement.classList.add('hidden');
+                }
+                
+                // Special validation for email
+                if (input.type === 'email' && input.value.trim()) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(input.value)) {
+                        input.classList.add('input-error');
+                        const errorElement = document.getElementById(`${input.id}-error`);
+                        if (errorElement) {
+                            errorElement.textContent = 'Please enter a valid email address';
+                            errorElement.classList.remove('hidden');
+                        }
+                        isValid = false;
+                    }
+                }
+                
+                // Special validation for custom amount
+                if (input.id === 'custom-amount' && document.getElementById('loan-amount').value === 'other') {
+                    if (!input.value.trim() || parseFloat(input.value) <= 0) {
+                        input.classList.add('input-error');
+                        const errorElement = document.getElementById(`${input.id}-error`);
+                        if (errorElement) errorElement.classList.remove('hidden');
+                        isValid = false;
+                    }
+                }
+            });
+
+            return isValid;
+        }
+
+        // Submit loan application
+        async function submitLoanApplication(formData) {
+            try {
+                // Show loading state
+                const submitBtn = document.querySelector('#loan-application-form button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...</span>';
+                submitBtn.disabled = true;
+                
+                // Generate random ID for the loan
+                const loanId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                
+                // Add metadata to loan data
+                formData.applicationDate = new Date();
+                formData.status = 'Pending';
+                formData.userId = currentUser.uid;
+                
+                // Upload ID document
+                const idCopyFile = document.getElementById('id-copy').files[0];
+                if (idCopyFile) {
+                    const idCopyPath = `users/${currentUser.uid}/loans/${loanId}/id_document`;
+                    formData.idDocumentUrl = await uploadFile(idCopyFile, idCopyPath);
+                }
+                
+                // Upload other documents if provided
+                const payslipFile = document.getElementById('payslip').files[0];
+                if (payslipFile) {
+                    const payslipPath = `users/${currentUser.uid}/loans/${loanId}/payslip`;
+                    formData.payslipUrl = await uploadFile(payslipFile, payslipPath);
+                }
+                
+                const bankStatementFile = document.getElementById('bank-statement').files[0];
+                if (bankStatementFile) {
+                    const bankStatementPath = `users/${currentUser.uid}/loans/${loanId}/bank_statement`;
+                    formData.bankStatementUrl = await uploadFile(bankStatementFile, bankStatementPath);
+                }
+                
+                const employmentConfirmationFile = document.getElementById('employment-confirmation').files[0];
+                if (employmentConfirmationFile) {
+                    const employmentConfirmationPath = `users/${currentUser.uid}/loans/${loanId}/employment_confirmation`;
+                    formData.employmentConfirmationUrl = await uploadFile(employmentConfirmationFile, employmentConfirmationPath);
+                }
+                
+                // Save to Firebase
+                await db.collection('users').doc(currentUser.uid).collection('loans').doc(loanId).set(formData);
+                
+                // Show success message
+                document.getElementById('success-modal').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error submitting loan application:', error);
+                showToast('Failed to submit application: ' + error.message, 'error');
+            } finally {
+                // Restore button state
+                const submitBtn = document.querySelector('#loan-application-form button[type="submit"]');
+                submitBtn.textContent = 'Submit Application';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Initialize and set up event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication state
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    
+                    // Check if we have loan data passed from the previous screen
+                    const loanData = sessionStorage.getItem('loanApplicationData');
+                    if (loanData) {
+                        loanApplicationData = JSON.parse(loanData);
+                        
+                        // Pre-fill the loan details section but don't skip steps
+                        document.getElementById('loan-amount').value = loanApplicationData.loanAmount;
+                        document.getElementById('loan-term').value = loanApplicationData.loanTerm;
+                        document.getElementById('loan-purpose').value = loanApplicationData.purpose;
+                        
+                        // Clear the stored data
+                        sessionStorage.removeItem('loanApplicationData');
+                    }
+                } else {
+                    // Redirect to login if not authenticated
+                    window.location.href = '../../auth/login.html';
+                }
+            });
+            
+            // Handle custom amount selection
+            document.getElementById('loan-amount').addEventListener('change', function() {
+                const customContainer = document.getElementById('custom-amount-container');
+                if (this.value === 'other') {
+                    customContainer.classList.remove('hidden');
+                    document.getElementById('custom-amount').required = true;
+                } else {
+                    customContainer.classList.add('hidden');
+                    document.getElementById('custom-amount').required = false;
+                }
+            });
+
+            // Section navigation
+            document.querySelectorAll('.next-section').forEach(button => {
+                button.addEventListener('click', function() {
+                    const currentSectionElement = this.closest('.section');
+                    const nextSectionId = this.getAttribute('data-next');
+                    
+                    // Validate current section before proceeding
+                    if (validateSection(currentSectionElement.id)) {
+                        currentSectionElement.classList.add('hidden');
+                        document.getElementById(nextSectionId).classList.remove('hidden');
+                        
+                        // Update current section
+                        currentSection = nextSectionId;
+                        
+                        // Update progress
+                        updateProgressSteps(nextSectionId);
+                        updateMobileProgress(nextSectionId);
+                        
+                        // Scroll to top of section
+                        document.getElementById(nextSectionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        showToast('Please fill in all required fields before proceeding.', 'error');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.prev-section').forEach(button => {
+                button.addEventListener('click', function() {
+                    const currentSectionElement = this.closest('.section');
+                    const prevSectionId = this.getAttribute('data-prev');
+                    
+                    currentSectionElement.classList.add('hidden');
+                    document.getElementById(prevSectionId).classList.remove('hidden');
+                    
+                    // Update current section
+                    currentSection = prevSectionId;
+                    
+                    // Update progress
+                    updateProgressSteps(prevSectionId);
+                    updateMobileProgress(prevSectionId);
+                });
+            });
+
+            // Form submission
+            document.getElementById('loan-application-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!document.getElementById('terms-agreement').checked) {
+                    showToast('Please agree to the terms of use before submitting.', 'error');
+                    document.getElementById('terms-agreement-error').classList.remove('hidden');
+                    return;
+                } else {
+                    document.getElementById('terms-agreement-error').classList.add('hidden');
+                }
+
+                // Validate all sections before submitting
+                let allSectionsValid = true;
+                const sections = document.querySelectorAll('.section');
+                
+                for (const section of sections) {
+                    if (!validateSection(section.id)) {
+                        allSectionsValid = false;
+                    }
+                }
+                
+                if (!allSectionsValid) {
+                    showToast('Please fill in all required fields before submitting.', 'error');
+                    return;
+                }
+
+                // Collect all form data
+                const formData = {
+                    fullName: document.getElementById('full-name').value,
+                    idNumber: document.getElementById('id-number').value,
+                    phoneNumber: document.getElementById('phone-number').value,
+                    email: document.getElementById('email-address').value,
+                    address: document.getElementById('residential-address').value,
+                    employer: document.getElementById('employer-name').value,
+                    jobTitle: document.getElementById('job-title').value,
+                    workAddress: document.getElementById('work-address').value,
+                    workContact: document.getElementById('work-contact').value,
+                    employmentDate: document.getElementById('employment-date').value,
+                    grossSalary: parseFloat(document.getElementById('gross-salary').value),
+                    netSalary: parseFloat(document.getElementById('net-salary').value),
+                    otherIncome: parseFloat(document.getElementById('other-income').value) || 0,
+                    rent: parseFloat(document.getElementById('rent').value) || 0,
+                    food: parseFloat(document.getElementById('food').value) || 0,
+                    transport: parseFloat(document.getElementById('transport').value) || 0,
+                    existingLoans: parseFloat(document.getElementById('existing-loans').value) || 0,
+                    otherExpenses: parseFloat(document.getElementById('other-expenses').value) || 0,
+                    loanAmount: document.getElementById('loan-amount').value === 'other' ? 
+                                parseFloat(document.getElementById('custom-amount').value) : 
+                                parseFloat(document.getElementById('loan-amount').value),
+                    loanTerm: document.getElementById('loan-term').value,
+                    purpose: document.getElementById('loan-purpose').value,
+                    termsAgreed: document.getElementById('terms-agreement').checked
+                };
+
+                // Add data from the loan application dialog if available
+                if (loanApplicationData) {
+                    formData.monthlyRepayment = loanApplicationData.monthlyRepayment;
+                    formData.totalRepayment = loanApplicationData.totalRepayment;
+                }
+
+                // Submit application
+                await submitLoanApplication(formData);
+            });
+            
+            // Close success modal
+            document.getElementById('close-success-modal').addEventListener('click', function() {
+                document.getElementById('success-modal').classList.add('hidden');
+                window.location.href = '/dashboard/loans.html';
+            });
+
+            // Initialize progress
+            updateProgressSteps('personal-info-section');
+            updateMobileProgress('personal-info-section');
+        });
+    </script>
+</body>
+</html>

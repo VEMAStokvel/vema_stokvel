@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Profile | Firebase App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            background: #4285F4;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .profile-content {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .profile-form {
+            flex: 1;
+            min-width: 300px;
+            padding: 30px;
+        }
+        
+        .profile-image-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #4285F4;
+        }
+        
+        .image-upload {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .image-upload label {
+            background: #4285F4;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .image-upload label:hover {
+            background: #3367D6;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus {
+            border-color: #4285F4;
+            outline: none;
+        }
+        
+        .address-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .address-section h3 {
+            margin-bottom: 15px;
+            color: #4285F4;
+        }
+        
+        .map-container {
+            flex: 1;
+            min-width: 300px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        #map {
+            width: 100%;
+            height: 400px;
+            background: #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .btn-update {
+            background: #4285F4;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-update:hover {
+            background: #3367D6;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #f44336;
+        }
+        
+        @media (max-width: 768px) {
+            .profile-content {
+                flex-direction: column;
+            }
+            
+            .map-container {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-70 flex items-center justify-center z-50">
+            <div class="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                <p class="text-gray-700">Loading your profile...</p>
+            </div>
+        </div>
+        
+        <!-- Error Modal -->
+        <div id="errorModal" class="fixed inset-0 bg-gray-800 bg-opacity-70 hidden items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-center text-gray-800 mb-2" id="errorTitle">Error</h2>
+                <p class="text-gray-600 text-center mb-6" id="errorMessage">Something went wrong</p>
+                <div class="flex justify-center">
+                    <button id="errorRetry" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md mr-4">Retry</button>
+                    <button id="errorDismiss" class="border border-gray-300 hover:bg-gray-100 text-gray-700 px-6 py-2 rounded-md">Dismiss</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header">
+            <h1><i class="fas fa-user-edit"></i> Update Your Profile</h1>
+        </div>
+        
+        <div class="profile-content">
+            <div class="profile-form">
+                <div class="profile-image-container">
+                    <div class="text-center">
+                        <img id="profileImage" src="https://via.placeholder.com/120" alt="Profile Image" class="profile-image">
+                        <div class="image-upload">
+                            <label for="imageUpload">
+                                <i class="fas fa-camera"></i> Change Photo
+                            </label>
+                            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Your email address" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" placeholder="Your phone number">
+                </div>
+                
+                <div class="address-section">
+                    <h3><i class="fas fa-map-marker-alt"></i> Address Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="street">Street</label>
+                        <input type="text" id="street" placeholder="Street address">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" placeholder="City">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="postalCode">Postal Code</label>
+                        <input type="text" id="postalCode" placeholder="Postal code">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" id="country" placeholder="Country">
+                    </div>
+                </div>
+                
+                <button class="btn-update" id="updateProfile">
+                    <i class="fas fa-sync"></i> Update Profile
+                </button>
+            </div>
+            
+            <div class="map-container">
+                <div id="map">
+                    <!-- Map will be rendered here -->
+                    <p style="text-align: center; padding-top: 180px; color: #666;">
+                        <i class="fas fa-map-marked-alt" style="font-size: 48px; margin-bottom: 16px;"></i><br>
+                        Address map will appear here
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i> Profile updated successfully!
+    </div>
+
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <!-- Cloud Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Storage -->
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Firebase configuration - replace with your actual config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Get a reference to the Firestore service
+        const db = firebase.firestore();
+        
+        // Get a reference to the Storage service
+        const storage = firebase.storage();
+        
+        // DOM elements
+        const emailInput = document.getElementById('email');
+        const nameInput = document.getElementById('name');
+        const phoneInput = document.getElementById('phone');
+        const streetInput = document.getElementById('street');
+        const cityInput = document.getElementById('city');
+        const postalCodeInput = document.getElementById('postalCode');
+        const countryInput = document.getElementById('country');
+        const profileImage = document.getElementById('profileImage');
+        const imageUpload = document.getElementById('imageUpload');
+        const updateButton = document.getElementById('updateProfile');
+        const notification = document.getElementById('notification');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const errorModal = document.getElementById('errorModal');
+        const errorTitle = document.getElementById('errorTitle');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorRetry = document.getElementById('errorRetry');
+        const errorDismiss = document.getElementById('errorDismiss');
+        
+        // Current user UID
+        let currentUserUID = null;
+        
+        // Show loading state
+        function showLoading() {
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.classList.add('flex');
+        }
+        
+        // Hide loading state
+        function hideLoading() {
+            loadingOverlay.classList.remove('flex');
+            loadingOverlay.classList.add('hidden');
+        }
+        
+        // Show error modal
+        function showError(title, message, retryCallback = null) {
+            errorTitle.textContent = title;
+            errorMessage.textContent = message;
+            errorModal.classList.remove('hidden');
+            errorModal.classList.add('flex');
+            
+            // Set up retry button if callback provided
+            if (retryCallback) {
+                errorRetry.onclick = () => {
+                    errorModal.classList.remove('flex');
+                    errorModal.classList.add('hidden');
+                    retryCallback();
+                };
+                errorRetry.classList.remove('hidden');
+            } else {
+                errorRetry.classList.add('hidden');
+            }
+        }
+        
+        // Hide error modal
+        function hideError() {
+            errorModal.classList.remove('flex');
+            errorModal.classList.add('hidden');
+        }
+        
+        // Set up error modal buttons
+        errorDismiss.addEventListener('click', hideError);
+        
+        // Listen for auth state changes
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                currentUserUID = user.uid;
+                emailInput.value = user.email;
+                loadUserProfile(user.uid);
+            } else {
+                // Redirect to login if not authenticated
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Load user profile from Firestore
+        function loadUserProfile(uid) {
+            showLoading();
+            
+            db.collection('users').doc(uid).get()
+            .then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    nameInput.value = userData.name || '';
+                    phoneInput.value = userData.phone || '';
+                    streetInput.value = userData.address?.street || '';
+                    cityInput.value = userData.address?.city || '';
+                    postalCodeInput.value = userData.address?.postalCode || '';
+                    countryInput.value = userData.address?.country || '';
+                    
+                    if (userData.profileImageUrl) {
+                        profileImage.src = userData.profileImageUrl;
+                    }
+                    
+                    // Update map with address
+                    updateMap();
+                    
+                    hideLoading();
+                } else {
+                    // Create a new profile if it doesn't exist
+                    return db.collection('users').doc(uid).set({
+                        email: firebase.auth().currentUser.email,
+                        createdAt: new Date()
+                    }).then(() => {
+                        hideLoading();
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error("Error loading user profile:", error);
+                hideLoading();
+                showError(
+                    "Load Error", 
+                    "Failed to load your profile. Please check your connection and try again.", 
+                    () => loadUserProfile(uid)
+                );
+            });
+        }
+        
+        // Handle profile image upload
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                showLoading();
+                // Upload the file to Firebase Storage
+                const storageRef = storage.ref();
+                const profileImageRef = storageRef.child(`profileImages/${currentUserUID}/${file.name}`);
+                
+                profileImageRef.put(file)
+                .then((snapshot) => {
+                    return snapshot.ref.getDownloadURL();
+                })
+                .then((downloadURL) => {
+                    profileImage.src = downloadURL;
+                    
+                    // Update the user document with the new image URL
+                    return db.collection('users').doc(currentUserUID).update({
+                        profileImageUrl: downloadURL
+                    });
+                })
+                .then(() => {
+                    hideLoading();
+                    showNotification('Profile image updated successfully!');
+                })
+                .catch((error) => {
+                    console.error("Error uploading image:", error);
+                    hideLoading();
+                    showError(
+                        "Upload Error", 
+                        "Failed to upload image. Please try again with a smaller file or check your connection."
+                    );
+                });
+            }
+        });
+        
+        // Update profile button click handler
+        updateButton.addEventListener('click', () => {
+            showLoading();
+            
+            const updatedData = {
+                name: nameInput.value,
+                phone: phoneInput.value,
+                address: {
+                    street: streetInput.value,
+                    city: cityInput.value,
+                    postalCode: postalCodeInput.value,
+                    country: countryInput.value
+                },
+                lastUpdated: new Date()
+            };
+            
+            // Update the user document in Firestore
+            db.collection('users').doc(currentUserUID).update(updatedData)
+            .then(() => {
+                hideLoading();
+                showNotification('Profile updated successfully!');
+                updateMap();
+            })
+            .catch((error) => {
+                console.error("Error updating profile:", error);
+                hideLoading();
+                showError(
+                    "Update Error", 
+                    "Failed to update your profile. Please check your connection and try again.",
+                    () => {
+                        // Retry logic
+                        db.collection('users').doc(currentUserUID).update(updatedData)
+                        .then(() => {
+                            showNotification('Profile updated successfully!');
+                            updateMap();
+                        });
+                    }
+                );
+            });
+        });
+        
+        // Show notification
+        function showNotification(message, isError = false) {
+            notification.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
+            notification.classList.add('show');
+            
+            if (isError) {
+                notification.classList.add('error');
+            } else {
+                notification.classList.remove('error');
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Update map with address (simplified version)
+        function updateMap() {
+            const address = `${streetInput.value}, ${cityInput.value}, ${postalCodeInput.value}, ${countryInput.value}`;
+            
+            if (address.trim().length > 5) {
+                document.getElementById('map').innerHTML = `
+                    <div style="padding: 20px; text-align: center;">
+                        <i class="fas fa-map-marked-alt" style="font-size: 48px; color: #4285F4; margin-bottom: 16px;"></i>
+                        <h3 style="margin-bottom: 10px;">Address Location</h3>
+                        <p style="color: #666;">${address}</p>
+                        <p style="color: #999; margin-top: 20px;">Map integration would appear here with a valid API key</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize the page
+        function init() {
+            // For demonstration purposes, we'll simulate a logged-in user
+            // In a real application, you would have proper authentication
+            setTimeout(() => {
+                if (!currentUserUID) {
+                    // Demo data
+                    emailInput.value = "user@example.com";
+                    nameInput.value = "John Doe";
+                    phoneInput.value = "+27 (555) 123-4567";
+                    streetInput.value = "123 Main Street";
+                    cityInput.value = "Your city";
+                    postalCodeInput.value = "10001";
+                    countryInput.value = "Your country";
+                    profileImage.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&q=80";
+                    
+                    updateMap();
+                    hideLoading();
+                }
+            }, 1500); // Simulate loading delay
+        }
+        
+        // Run initialization
+        showLoading();
+        init();
+    </script>
+</body>
+</html>

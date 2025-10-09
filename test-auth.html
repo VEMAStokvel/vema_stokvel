@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .info { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    
+    <div class="info">
+        <h3>Current Auth State:</h3>
+        <p id="auth-status">Checking...</p>
+        <p id="session-info">SessionStorage: <span id="session-data"></span></p>
+    </div>
+    
+    <button onclick="testLoanButton()">Test Loan Apply Now</button>
+    <button onclick="testFuneralButton()">Test Funeral Learn More</button>
+    <button onclick="clearSession()">Clear SessionStorage</button>
+    <button onclick="checkAuth()">Check Auth State</button>
+    
+    <div class="info">
+        <h3>Console Logs:</h3>
+        <div id="logs" style="background: #000; color: #0f0; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace;"></div>
+    </div>
+
+    <script src="js/firebase.js" type="module"></script>
+    <script src="js/utils.js" type="module"></script>
+    
+    <script type="module">
+        import { auth } from './js/firebase.js';
+        import { requireAuth } from './js/utils.js';
+        
+        // Override console.log to show in page
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const logsDiv = document.getElementById('logs');
+            logsDiv.innerHTML += args.join(' ') + '<br>';
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        };
+        
+        function updateAuthStatus() {
+            const user = auth.currentUser;
+            const statusEl = document.getElementById('auth-status');
+            const sessionEl = document.getElementById('session-data');
+            
+            if (user) {
+                statusEl.textContent = `Authenticated as: ${user.email}`;
+                statusEl.style.color = 'green';
+            } else {
+                statusEl.textContent = 'Not authenticated';
+                statusEl.style.color = 'red';
+            }
+            
+            const intendedDest = sessionStorage.getItem('intendedDestination');
+            const intendedAction = sessionStorage.getItem('intendedAction');
+            sessionEl.textContent = `Destination: ${intendedDest || 'none'}, Action: ${intendedAction || 'none'}`;
+        }
+        
+        window.testLoanButton = function() {
+            console.log('=== Testing Loan Button ===');
+            requireAuth('dashboard/loans.html', 'apply for a loan')
+                .then(() => {
+                    console.log('Auth successful, would redirect to loans dashboard');
+                    // Don't actually redirect in test
+                })
+                .catch(() => {
+                    console.log('Auth failed, would redirect to login');
+                });
+        };
+        
+        window.testFuneralButton = function() {
+            console.log('=== Testing Funeral Button ===');
+            requireAuth('dashboard/funeral.html', 'access funeral cover information')
+                .then(() => {
+                    console.log('Auth successful, would redirect to funeral dashboard');
+                    // Don't actually redirect in test
+                })
+                .catch(() => {
+                    console.log('Auth failed, would redirect to login');
+                });
+        };
+        
+        window.clearSession = function() {
+            sessionStorage.clear();
+            console.log('SessionStorage cleared');
+            updateAuthStatus();
+        };
+        
+        window.checkAuth = function() {
+            console.log('=== Checking Auth State ===');
+            const user = auth.currentUser;
+            console.log('Current user:', user ? user.email : 'null');
+            updateAuthStatus();
+        };
+        
+        // Listen for auth state changes
+        auth.onAuthStateChanged((user) => {
+            console.log('Auth state changed:', user ? user.email : 'null');
+            updateAuthStatus();
+        });
+        
+        // Initial update
+        updateAuthStatus();
+    </script>
+</body>
+</html>

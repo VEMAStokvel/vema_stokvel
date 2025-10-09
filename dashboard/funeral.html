@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vema Stokvel - Funeral Cover</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
+    <style>
+        .mobile-menu-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+        }
+        .header-with-menu {
+            padding-right: 3.5rem;
+        }
+        @media (min-width: 768px) {
+            .header-with-menu {
+                padding-right: 1rem;
+            }
+            .mobile-menu-btn {
+                display: none;
+            }
+        }
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .benefit-item {
+            transition: all 0.2s ease;
+        }
+        .benefit-item.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Mobile Menu Button - Top Right -->
+    <div class="mobile-menu-btn">
+        <button id="mobile-menu-button" class="p-2 bg-blue-800 text-white rounded-full shadow-lg focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="flex h-screen">
+        <div id="sidebar" class="bg-blue-800 text-white w-64 flex-shrink-0 fixed md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition duration-200 ease-in-out z-40">
+            <div class="p-4 flex items-center space-x-2">
+                <img src="../../assets/logo/Vema White.png" alt="Vema Logo" class="h-8">
+            </div>
+            <nav class="mt-6">
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Main</div>
+                <a href="index.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Dashboard
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Stokvel</div>
+                <a href="stokvel.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    My Stokvels
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Financial Services</div>
+                <a href="store.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    Online Store
+                </a>
+                <a href="funeral.html" class="block px-4 py-3 bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Funeral Cover
+                </a>
+                <a href="loans.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Loans
+                </a>
+                <div class="px-4 py-2 text-blue-200 uppercase text-xs font-semibold">Account</div>
+                <a href="#" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Profile
+                </a>
+                <a href="constitution.html" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center space-x-3">
+                    <i class="fas fa-file-contract w-5 text-center"></i>
+                    <span>Constitution</span>
+                </a>
+                <a href="#" id="logout-btn" class="block px-4 py-3 hover:bg-blue-700 text-white flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto md:ml-0">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center fixed w-full md:relative z-30 header-with-menu">
+                <h1 class="text-xl md:text-2xl font-semibold text-gray-800">Funeral Cover</h1>
+                <div class="flex items-center space-x-4">
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="p-4 md:p-6 pt-16 md:pt-5">
+                <!-- Current Cover Status -->
+                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+                    <h2 class="text-lg md:text-xl font-semibold mb-4">Your Funeral Cover</h2>
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 mb-2">Current Status</p>
+                            <div class="flex items-center">
+                                <span id="cover-status" class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 mr-3">Loading...</span>
+                                <span id="cover-type" class="text-gray-700"><div class="loading-spinner"></div>Loading cover details</span>
+                            </div>
+                            <div id="cover-details" class="mt-2 hidden">
+                                <p class="text-gray-600">Premium: <span id="cover-premium" class="font-medium">R0</span>/month</p>
+                                <p class="text-gray-600">Started: <span id="cover-date" class="font-medium">Not started</span></p>
+                                <p class="text-gray-600">Total Premium: <span id="total-premium" class="font-medium">R0</span>/month</p>
+                            </div>
+                        </div>
+                        <button id="manage-cover-btn" class="mt-4 md:mt-0 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            <span id="manage-cover-text">Manage Cover</span>
+                        </button>
+                    </div>
+                </div>  
+
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Make Funeral Cover Contribution</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Bank Details -->
+                            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                <h4 class="text-lg font-semibold mb-4 flex items-center">
+                                    <i class="fas fa-university mr-2 text-blue-600"></i> Funeral Cover Bank Account Details
+                                </h4>
+                                <div class="space-y-4">
+                                    <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                                        <p class="text-sm text-blue-800 font-medium">
+                                            <i class="fas fa-info-circle mr-1"></i> Important: By making payment, know that:
+                                        </p>
+                                        <ul class="list-disc list-inside text-xs text-blue-700 mt-1 pl-1">
+                                            <li>You're joining the desired funaral</li>
+                                            <li>See the Referece below to correctly join</li>
+                                            <li>Reference must be correctly entered when depositing</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Bank Name</label>
+                                        <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
+                                            FNB - AKANANI FUNERAL ASSIST
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Account Number</label>
+                                        <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
+                                            62860619869
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Branch Code</label>
+                                        <div class="font-medium text-gray-800 bg-white p-2 rounded border border-gray-300">
+                                            210827
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-500 mb-1">Reference</label>
+                                        <div class="font-mono text-gray-800 bg-white p-2 rounded border border-gray-300" id="reference-number">
+                                            Family Funeral Cover
+                                        </div>
+                                    </div>
+                                    <div class="pt-2">
+                                        <p class="text-xs text-gray-500">
+                                            <i class="fas fa-info-circle mr-1"></i> This reference includes your stokvel type. Use it exactly as shown.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Form -->
+                            <div>
+                                <div class="mb-6">
+                                    <label class="block text-gray-700 text-sm font-medium mb-2">Amount Deposited (ZAR)</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">R</span>
+                                        <input type="number" 
+                                               class="w-full pl-8 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                               id="contribution-amount" 
+                                               min="100" 
+                                               step="50" 
+                                               placeholder="500.00"
+                                               required>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Please enter the exact amount you deposited to Vema Bank</p>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <button onclick="sendWhatsAppConfirmation()" 
+                                            class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                                        <i class="fab fa-whatsapp text-xl"></i>
+                                        Share Proof via WhatsApp
+                                    </button>
+                                    
+                                    <button onclick="sendEmailConfirmation()" 
+                                            class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                        <i class="fas fa-envelope"></i>
+                                        Share Proof via Email
+                                    </button>
+                                    
+                                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                                        <p class="text-xs text-yellow-800">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i> 
+                                            After making your deposit, funds will be added to your stokvel account by admin within 24-48 hours after you share your proof of payment via the notification buttons above.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Support Section -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Customer Support</h3>
+                        <p class="text-gray-600 mb-6">Need assistance with your funeral cover? Contact our support team via WhatsApp or email.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button onclick="contactSupportWhatsApp()" 
+                                    class="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                                <i class="fab fa-whatsapp text-xl"></i>
+                                Contact Support via WhatsApp
+                            </button>
+                            
+                            <button onclick="contactSupportEmail()" 
+                                    class="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-envelope"></i>
+                                Contact Support via Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cover Description -->
+                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+                    <h2 class="text-lg md:text-xl font-semibold mb-4">Vema Funeral Cover – Helping You in Tough Times</h2>
+                    <p class="text-gray-600 mb-4">
+                        When you or someone in your family passes away, funeral costs can be stressful. 
+                        Vema Funeral Cover helps you pay for the funeral so you don't have to worry about 
+                        money during a difficult time.
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+                        <div>
+                            <h3 class="text-base md:text-lg font-semibold text-blue-700 mb-2">What Is Funeral Cover?</h3>
+                            <p class="text-gray-600 mb-4">Anyone can join – It's open to everyone.</p>
+                            <p class="text-gray-600 mb-2 font-semibold">It pays out money when:</p>
+                            <ul class="list-disc pl-6 mb-4 text-gray-700 space-y-1">
+                                <li>You (the main member) pass away</li>
+                                <li>Your husband or wife passes away</li>
+                                <li>Your children (up to 5) pass away</li>
+                                <li>Extended family members pass away</li>
+                            </ul>
+
+                            <h3 class="text-base md:text-lg font-semibold text-blue-700 mb-2">What You Need to Claim</h3>
+                            <p class="text-gray-600 mb-2">To claim the money, you'll need:</p>
+                            <ul class="list-disc pl-6 mb-4 text-gray-700 space-y-1">
+                                <li>A claim form</li>
+                                <li>ID of the person who passed away</li>
+                                <li>ID of the person claiming the money</li>
+                                <li>Death certificate</li>
+                                <li>Police report (only if the death was from an accident or unnatural cause)</li>
+                                <li>Birth certificate (if a child passed away)</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-base md:text-lg font-semibold text-blue-700 mb-2">Waiting Periods (When Cover Starts)</h3>
+                            <ul class="list-disc pl-6 mb-4 text-gray-700 space-y-1">
+                                <li>Natural death – You're covered after <strong>6 months</strong></li>
+                                <li>Accidental death – You're covered <strong>right after your first payment</strong></li>
+                                <li>Suicide – You're covered after <strong>24 months</strong></li>
+                            </ul>
+
+                            <h3 class="text-base md:text-lg font-semibold text-blue-700 mb-2">Who Can Be Covered?</h3>
+                            <ul class="list-disc pl-6 text-gray-700 space-y-1 mb-4">
+                                <li>You (main person who joins)</li>
+                                <li>Your husband or wife</li>
+                                <li>Up to 5 kids (biological or adopted)</li>
+                                <li>Extended family (like parents, siblings, etc.)</li>
+                            </ul>
+
+                            <p class="text-gray-600">
+                                Even if you're not South African, you can still join if you have:
+                            </p>
+                            <ul class="list-disc pl-6 text-gray-700 space-y-1">
+                                <li>A South African passport</li>
+                                <li>A South African bank account</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cover Plans -->
+                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+                    <h2 class="text-lg md:text-xl font-semibold mb-4">Family Assist Package</h2>
+                    <div class="grid md:grid-cols-3 gap-4 md:gap-6">
+                        <!-- Main Member Plan -->
+                        <div class="border rounded-lg p-4 md:p-6 hover:border-blue-500 transition-colors">
+                            <h3 class="font-bold text-base md:text-lg mb-2">Main Member</h3>
+                            <p class="text-gray-600 mb-4">Includes Spouse & Kids</p>
+                            <div class="mb-4">
+                                <p class="text-xl md:text-2xl font-bold text-blue-600">R75<span class="text-xs md:text-sm text-gray-500">/month</span></p>
+                            </div>
+                            <ul class="space-y-2 mb-4 md:mb-6 text-sm md:text-base">
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Covers you as main member</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Includes spouse</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Covers up to 5 children</span>
+                                </li>
+                            </ul>
+                            <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm md:text-base select-plan" data-plan="main" data-price="75">Select Plan</button>
+                        </div>
+    
+                        <!-- Extended Member (Under 65) -->
+                        <div class="border-2 border-blue-500 rounded-lg p-4 md:p-6 bg-blue-50 relative">
+                            <div class="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-bl rounded-tr">POPULAR</div>
+                            <h3 class="font-bold text-base md:text-lg mb-2">Extended Member (Under 65)</h3>
+                            <p class="text-gray-600 mb-4">Cover for parents or other family members</p>
+                            <div class="mb-4">
+                                <p class="text-xl md:text-2xl font-bold text-blue-600">R55<span class="text-xs md:text-sm text-gray-500">/month</span></p>
+                            </div>
+                            <ul class="space-y-2 mb-4 md:mb-6 text-sm md:text-base">
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin-round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>For extended family members</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Age limit: under 65 years</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Affordable premium</span>
+                                </li>
+                            </ul>
+                            <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm md:text-base select-plan" data-plan="extended-under65" data-price="55">Select Plan</button>
+                        </div>
+    
+                        <!-- Extended Member (Above 65) -->
+                        <div class="border rounded-lg p-4 md:p-6 hover:border-blue-500 transition-colors">
+                            <h3 class="font-bold text-base md:text-lg mb-2">Extended Member (Above 65)</h3>
+                            <p class="text-gray-600 mb-4">Cover for elderly family members</p>
+                            <div class="mb-4">
+                                <p class="text-xl md:text-2xl font-bold text-blue-600">R85<span class="text-xs md:text-sm text-gray-500">/month</span></p>
+                            </div>
+                            <ul class="space-y-2 mb-4 md:mb-6 text-sm md:text-base">
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>For elderly family members</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Age limit: 65 years and above</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Comprehensive cover</span>
+                                </li>
+                            </ul>
+                            <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm md:text-base select-plan" data-plan="extended-over65" data-price="85">Select Plan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Benefits -->
+                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
+                    <h2 class="text-lg md:text-xl font-semibold mb-4">Additional More Benefits</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                        <div class="border rounded-lg p-3 md:p-4 text-center">
+                            <h3 class="font-semibold text-sm md:text-base mb-1">100 Chairs</h3>
+                            <p class="text-blue-600 font-bold text-sm md:text-base">R25</p>
+                        </div>
+                        <div class="border rounded-lg p-3 md:p-4 text-center">
+                            <h3 class="font-semibold text-sm md:text-base mb-1">Mobile Toilet</h3>
+                            <p class="text-blue-600 font-bold text-sm md:text-base">R30</p>
+                        </div>
+                        <div class="border rounded-lg p-3 md:p-4 text-center">
+                            <h3 class="font-semibold text-sm md:text-base mb-1">Mobile Fridge</h3>
+                            <p class="text-blue-600 font-bold text-sm md:text-base">R35</p>
+                        </div>
+                        <div class="border rounded-lg p-3 md:p-4 text-center hidden md:block">
+                            <h3 class="font-semibold text-sm md:text-base mb-1">Decoration</h3>
+                            <p class="text-blue-600 font-bold text-sm md:text-base">R65</p>
+                        </div>
+                        <div class="border rounded-lg p-3 md:p-4 text-center hidden md:block">
+                            <h3 class="font-semibold text-sm md:text-base mb-1">Catering</h3>
+                            <p class="text-blue-600 font-bold text-sm md:text-base">R75</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-3 md:hidden">
+                        <div class="border rounded-lg p-3 text-center">
+                            <h3 class="font-semibold text-sm mb-1">Decoration</h3>
+                            <p class="text-blue-600 font-bold text-sm">R65</p>
+                        </div>
+                        <div class="border rounded-lg p-3 text-center">
+                            <h3 class="font-semibold text-sm mb-1">Catering</h3>
+                            <p class="text-blue-600 font-bold text-sm">R75</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Family Details Modal -->
+    <div id="family-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-4 md:p-6 max-w-2xl w-full max-h-screen overflow-auto mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg md:text-xl font-semibold">Family Details</h3>
+                <button id="close-family-modal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="family-form">
+                <div class="mb-6">
+                    <h4 class="font-medium text-base md:text-lg mb-3">Main Member</h4>
+                    <div class="grid md:grid-cols-2 gap-3 md:gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-xs md:text-sm mb-2">Full Name</label>
+                            <input type="text" id="main-member-name" class="w-full p-2 border rounded text-sm md:text-base bg-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs md:text-sm mb-2">ID Number</label>
+                            <input type="text" id="main-member-id" class="w-full p-2 border rounded text-sm md:text-base bg-gray-100" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-base md:text-lg">Spouse</h4>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="has-spouse" class="rounded text-blue-600">
+                            <span class="ml-2 text-xs md:text-sm text-gray-700">Add spouse</span>
+                        </label>
+                    </div>
+                    <div id="spouse-fields" class="grid md:grid-cols-2 gap-3 md:gap-4 hidden">
+                        <div>
+                            <label class="block text-gray-700 text-xs md:text-sm mb-2">Full Name</label>
+                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Spouse name" id="spouse-name">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs md:text-sm mb-2">ID Number</label>
+                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base" placeholder="Spouse ID number" id="spouse-id">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-base md:text-lg">Children</h4>
+                        <button type="button" id="add-child" class="text-blue-600 hover:text-blue-800 text-xs md:text-sm">+ Add Child</button>
+                    </div>
+                    <div id="children-fields" class="space-y-3 md:space-y-4">
+                        <!-- Children will be added here -->
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-base md:text-lg">Parents</h4>
+                        <button type="button" id="add-parent" class="text-blue-600 hover:text-blue-800 text-xs md:text-sm">+ Add Parent</button>
+                    </div>
+                    <div id="parents-fields" class="space-y-3 md:space-y-4">
+                        <!-- Parents will be added here -->
+                    </div>
+                </div>
+
+                <!-- Add More Benefits Section -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-base md:text-lg">Add More Benefits</h4>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                        <div class="benefit-item border rounded-lg p-2 md:p-3 text-center cursor-pointer hover:bg-blue-50" data-benefit="chairs" data-price="25">
+                            <h5 class="font-semibold text-xs md:text-sm mb-1">100 Chairs</h5>
+                            <p class="text-blue-600 font-bold text-xs md:text-sm">R25</p>
+                        </div>
+                        <div class="benefit-item border rounded-lg p-2 md:p-3 text-center cursor-pointer hover:bg-blue-50" data-benefit="toilet" data-price="30">
+                            <h5 class="font-semibold text-xs md:text-sm mb-1">Mobile Toilet</h5>
+                            <p class="text-blue-600 font-bold text-xs md:text-sm">R30</p>
+                        </div>
+                        <div class="benefit-item border rounded-lg p-2 md:p-3 text-center cursor-pointer hover:bg-blue-50" data-benefit="fridge" data-price="35">
+                            <h5 class="font-semibold text-xs md:text-sm mb-1">Mobile Fridge</h5>
+                            <p class="text-blue-600 font-bold text-xs md:text-sm">R35</p>
+                        </div>
+                        <div class="benefit-item border rounded-lg p-2 md:p-3 text-center cursor-pointer hover:bg-blue-50" data-benefit="decoration" data-price="65">
+                            <h5 class="font-semibold text-xs md:text-sm mb-1">Decoration</h5>
+                            <p class="text-blue-600 font-bold text-xs md:text-sm">R65</p>
+                        </div>
+                        <div class="benefit-item border rounded-lg p-2 md:p-3 text-center cursor-pointer hover:bg-blue-50" data-benefit="catering" data-price="75">
+                            <h5 class="font-semibold text-xs md:text-sm mb-1">Catering</h5>
+                            <p class="text-blue-600 font-bold text-xs md:text-sm">R75</p>
+                        </div>
+                    </div>
+                    <div id="selected-benefits" class="mt-4 hidden">
+                        <h5 class="font-medium text-sm mb-2">Selected Benefits:</h5>
+                        <ul id="selected-benefits-list" class="list-disc list-inside text-sm text-gray-700">
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancel-family" class="bg-gray-200 text-gray-800 px-3 md:px-4 py-1 md:py-2 rounded hover:bg-gray-300 text-sm md:text-base">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white px-3 md:px-4 py-1 md:py-2 rounded hover:bg-blue-700 text-sm md:text-base" id="save-family-btn">
+                        <span id="save-family-text">Save Details</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEik5dGton3H4LyGDzYbNrw6GwutGNOqk",
+            authDomain: "vema-7606a.firebaseapp.com",
+            projectId: "vema-7606a",
+            storageBucket: "vema-7606a.firebasestorage.app",
+            messagingSenderId: "127492940070",
+            appId: "1:127492940070:web:ddf247a2cb0723ddcbe1e7",
+            measurementId: "G-2E6VC65Q3K"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+    
+        // Store user profile data
+        let userProfileData = null;
+        let selectedBenefits = [];
+    
+        // Mobile menu toggle functionality
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+    
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = document.getElementById('mobile-menu-button');
+            
+            if (!sidebar.contains(event.target) && !menuButton.contains(event.target) && window.innerWidth < 768) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    
+        // Toggle spouse fields
+        document.getElementById('has-spouse').addEventListener('change', function() {
+            document.getElementById('spouse-fields').classList.toggle('hidden', !this.checked);
+        });
+    
+        // Add child fields
+        document.getElementById('add-child').addEventListener('click', function() {
+            const childrenFields = document.getElementById('children-fields');
+            const childIndex = childrenFields.children.length + 1;
+            
+            const childDiv = document.createElement('div');
+            childDiv.className = 'border rounded-lg p-3 md:p-4 bg-gray-50';
+            childDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h5 class="font-medium text-sm md:text-base">Child ${childIndex}</h5>
+                    <button type="button" class="text-red-500 hover:text-red-700 remove-child">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 md:gap-4">
+                    <div>
+                        <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-name" placeholder="Child name" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs md:text-sm mb-1">ID/Birth Certificate Number</label>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-id" placeholder="ID/Birth certificate" required>
+                    </div>
+                </div>
+            `;
+            
+            childrenFields.appendChild(childDiv);
+            
+            // Add event listener to remove button
+            childDiv.querySelector('.remove-child').addEventListener('click', function() {
+                childDiv.remove();
+            });
+        });
+    
+        // Add parent fields
+        document.getElementById('add-parent').addEventListener('click', function() {
+            const parentsFields = document.getElementById('parents-fields');
+            const parentIndex = parentsFields.children.length + 1;
+            
+            const parentDiv = document.createElement('div');
+            parentDiv.className = 'border rounded-lg p-3 md:p-4 bg-gray-50';
+            parentDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h5 class="font-medium text-sm md:text-base">Parent ${parentIndex}</h5>
+                    <button type="button" class="text-red-500 hover:text-red-700 remove-parent">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 md:gap-4">
+                    <div>
+                        <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-name" placeholder="Parent name" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs md:text-sm mb-1">ID Number</label>
+                        <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-id" placeholder="Parent ID" required>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="block text-gray-700 text-xs md:text-sm mb-1">Relationship</label>
+                    <select class="w-full p-2 border rounded text-sm md:text-base parent-relationship" required>
+                        <option value="">Select relationship</option>
+                        <option value="mother">Mother</option>
+                        <option value="father">Father</option>
+                        <option value="grandmother">Grandmother</option>
+                        <option value="grandfather">Grandfather</option>
+                    </select>
+                </div>
+            `;
+            
+            parentsFields.appendChild(parentDiv);
+            
+            // Add event listener to remove button
+            parentDiv.querySelector('.remove-parent').addEventListener('click', function() {
+                parentDiv.remove();
+            });
+        });
+    
+        // Plan selection
+        document.querySelectorAll('.select-plan').forEach(button => {
+            button.addEventListener('click', function() {
+                const planType = this.getAttribute('data-plan');
+                const planPrice = this.getAttribute('data-price');
+                
+                // Store the selected plan in localStorage
+                localStorage.setItem('selectedFuneralPlan', JSON.stringify({
+                    type: planType,
+                    price: planPrice
+                }));
+                
+                // Redirect to the funeral form page
+                window.location.href = 'Funeral Widget/funeral-form.html';
+            });
+        });
+    
+        // Modal close buttons
+        document.getElementById('close-family-modal').addEventListener('click', function() {
+            document.getElementById('family-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancel-family').addEventListener('click', function() {
+            document.getElementById('family-modal').classList.add('hidden');
+        });
+    
+        // Manage cover button
+        document.getElementById('manage-cover-btn').addEventListener('click', function() {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // Show modal first
+                document.getElementById('family-modal').classList.remove('hidden');
+                
+                // Load data
+                loadUserFuneralData(user.uid);
+            } else {
+                alert('Please log in to manage your family details.');
+            }
+        });
+
+        // Benefit selection functionality
+        document.querySelectorAll('.benefit-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const benefit = this.getAttribute('data-benefit');
+                const price = parseInt(this.getAttribute('data-price'));
+                
+                // Check if benefit is already selected
+                const index = selectedBenefits.findIndex(b => b.benefit === benefit);
+                
+                if (index === -1) {
+                    // Add benefit
+                    selectedBenefits.push({ benefit, price });
+                    this.classList.add('selected');
+                } else {
+                    // Remove benefit
+                    selectedBenefits.splice(index, 1);
+                    this.classList.remove('selected');
+                }
+                
+                updateSelectedBenefitsList();
+            });
+        });
+        
+        function updateSelectedBenefitsList() {
+            const selectedBenefitsList = document.getElementById('selected-benefits-list');
+            const selectedBenefitsContainer = document.getElementById('selected-benefits');
+            
+            // Clear the list
+            selectedBenefitsList.innerHTML = '';
+            
+            if (selectedBenefits.length === 0) {
+                selectedBenefitsContainer.classList.add('hidden');
+                return;
+            }
+            
+            selectedBenefitsContainer.classList.remove('hidden');
+            
+            // Add each selected benefit to the list
+            selectedBenefits.forEach(benefit => {
+                const li = document.createElement('li');
+                li.textContent = `${benefit.benefit} - R${benefit.price}`;
+                selectedBenefitsList.appendChild(li);
+            });
+        }
+
+        // Function to load user profile data
+        function loadUserProfileData(userId) {
+            return db.collection("users").doc(userId).get()
+                .then((userDoc) => {
+                    if (userDoc.exists) {
+                        userProfileData = userDoc.data();
+                        console.log('User profile data loaded:', userProfileData);
+                        
+                        // Pre-populate the main member fields in the Family Details modal
+                        document.getElementById('main-member-name').value = 
+                            userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                        document.getElementById('main-member-id').value = 
+                            userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                        
+                        return userProfileData;
+                    } else {
+                        console.warn('User document does not exist');
+                        return null;
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error loading user profile: ", error);
+                    return null;
+                });
+        }
+
+        // Function to load user funeral data
+        function loadUserFuneralData(userId) {
+            console.log('Loading funeral data for user:', userId);
+
+            const nameField = document.getElementById('main-member-name');
+            const idField = document.getElementById('main-member-id');
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverPremium = document.getElementById('cover-premium');
+            const coverDate = document.getElementById('cover-date');
+            const totalPremium = document.getElementById('total-premium');
+            const coverDetails = document.getElementById('cover-details');
+            const hasSpouseCheckbox = document.getElementById('has-spouse');
+            const spouseNameField = document.getElementById('spouse-name');
+            const spouseIdField = document.getElementById('spouse-id');
+            const childrenFields = document.getElementById('children-fields');
+            const parentsFields = document.getElementById('parents-fields');
+
+            // Show loading state
+            document.getElementById('save-family-text').innerHTML = '<div class="loading-spinner"></div>Loading...';
+            document.getElementById('save-family-btn').disabled = true;
+
+            // Clear existing fields
+            childrenFields.innerHTML = '';
+            parentsFields.innerHTML = '';
+            
+            // Reset selected benefits
+            selectedBenefits = [];
+            document.querySelectorAll('.benefit-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.getElementById('selected-benefits').classList.add('hidden');
+
+            // First ensure we have user profile data
+            if (!userProfileData) {
+                loadUserProfileData(userId).then(() => {
+                    // Now load funeral data
+                    loadFuneralDataFromFirestore(userId);
+                });
+            } else {
+                // We already have user data, just load funeral data
+                loadFuneralDataFromFirestore(userId);
+            }
+        }
+
+        // Function to load funeral data from Firestore
+        function loadFuneralDataFromFirestore(userId) {
+            const nameField = document.getElementById('main-member-name');
+            const idField = document.getElementById('main-member-id');
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverPremium = document.getElementById('cover-premium');
+            const coverDate = document.getElementById('cover-date');
+            const totalPremium = document.getElementById('total-premium');
+            const coverDetails = document.getElementById('cover-details');
+            const hasSpouseCheckbox = document.getElementById('has-spouse');
+            const spouseNameField = document.getElementById('spouse-name');
+            const spouseIdField = document.getElementById('spouse-id');
+            const childrenFields = document.getElementById('children-fields');
+            const parentsFields = document.getElementById('parents-fields');
+
+            db.collection("users").doc(userId).collection("funeral")
+                .limit(1)
+                .get()
+                .then((querySnapshot) => {
+                    console.log('Found', querySnapshot.size, 'funeral documents');
+                    
+                    if (!querySnapshot.empty) {
+                        const funeralDoc = querySnapshot.docs[0];
+                        const funeralData = funeralDoc.data();
+                        console.log('Funeral document data:', funeralData);
+                        
+                        // Update cover status and details
+                        coverStatus.textContent = 'Active';
+                        coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-200 text-green-800 mr-3';
+                        coverType.textContent = 'Family Funeral Cover';
+                        coverDetails.classList.remove('hidden');
+                        
+                        // Populate main member details - use funeral data if available, otherwise use profile data
+                        if (funeralData.mainMember && typeof funeralData.mainMember === 'object') {
+                            const fullName = funeralData.mainMember.fullName;
+                            const idNumber = funeralData.mainMember.idNumber;
+                            const memberPremium = funeralData.mainMember.premium;
+                            
+                            nameField.value = fullName || userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                            idField.value = idNumber || userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                            
+                            if (memberPremium) {
+                                coverPremium.textContent = `R${memberPremium}`;
+                            } else {
+                                coverPremium.textContent = 'R75';
+                            }
+                        } else {
+                            // Use profile data if no funeral data
+                            coverPremium.textContent = 'R75';
+                            nameField.value = userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                            idField.value = userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                        }
+                        
+                        // Update total premium and date
+                        if (funeralData.totalMonthlyPremium) {
+                            totalPremium.textContent = `R${funeralData.totalMonthlyPremium}`;
+                        } else {
+                            totalPremium.textContent = 'R75';
+                        }
+                        
+                        if (funeralData.declaration && funeralData.declaration.submittedAt) {
+                            const submittedDate = funeralData.declaration.submittedAt.toDate();
+                            coverDate.textContent = submittedDate.toLocaleDateString('en-ZA', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                        } else if (funeralData.declaration && funeralData.declaration.date) {
+                            coverDate.textContent = funeralData.declaration.date;
+                        } else {
+                            coverDate.textContent = 'Date not available';
+                        }
+
+                        // Populate spouse details if exists
+                        if (funeralData.spouse && funeralData.spouse.fullName) {
+                            hasSpouseCheckbox.checked = true;
+                            document.getElementById('spouse-fields').classList.remove('hidden');
+                            spouseNameField.value = funeralData.spouse.fullName || '';
+                            spouseIdField.value = funeralData.spouse.idNumber || '';
+                        } else {
+                            hasSpouseCheckbox.checked = false;
+                            document.getElementById('spouse-fields').classList.add('hidden');
+                        }
+
+                        // Populate children details
+                        if (funeralData.children && Array.isArray(funeralData.children)) {
+                            funeralData.children.forEach((child, index) => {
+                                const childDiv = document.createElement('div');
+                                childDiv.className = 'border rounded-lg p-3 md:p-4 bg-gray-50';
+                                childDiv.innerHTML = `
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h5 class="font-medium text-sm md:text-base">Child ${index + 1}</h5>
+                                        <button type="button" class="text-red-500 hover:text-red-700 remove-child">
+                                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </div>
+                                    <div class="grid md:grid-cols-2 gap-3 md:gap-4">
+                                        <div>
+                                            <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
+                                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-name" placeholder="Child name" value="${child.fullName || ''}" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-xs md:text-sm mb-1">ID/Birth Certificate Number</label>
+                                            <input type="text" class="w-full p-2 border rounded text-sm md:text-base child-id" placeholder="ID/Birth certificate" value="${child.idNumber || ''}" required>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                childrenFields.appendChild(childDiv);
+                                
+                                // Add event listener to remove button
+                                childDiv.querySelector('.remove-child').addEventListener('click', function() {
+                                    childDiv.remove();
+                                });
+                            });
+                        }
+
+                        // Populate parents details
+                        if (funeralData.extendedMembers && Array.isArray(funeralData.extendedMembers)) {
+                            funeralData.extendedMembers.forEach((parent, index) => {
+                                if (parent.relationship && (parent.relationship === 'mother' || parent.relationship === 'father' || 
+                                    parent.relationship === 'grandmother' || parent.relationship === 'grandfather')) {
+                                    const parentDiv = document.createElement('div');
+                                    parentDiv.className = 'border rounded-lg p-3 md:p-4 bg-gray-50';
+                                    parentDiv.innerHTML = `
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h5 class="font-medium text-sm md:text-base">${parent.relationship.charAt(0).toUpperCase() + parent.relationship.slice(1)} ${index + 1}</h5>
+                                            <button type="button" class="text-red-500 hover:text-red-700 remove-parent">
+                                                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                        <div class="grid md:grid-cols-2 gap-3 md:gap-4">
+                                            <div>
+                                                <label class="block text-gray-700 text-xs md:text-sm mb-1">Full Name</label>
+                                                <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-name" placeholder="Parent name" value="${parent.fullName || ''}" required>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 text-xs md:text-sm mb-1">ID Number</label>
+                                                <input type="text" class="w-full p-2 border rounded text-sm md:text-base parent-id" placeholder="Parent ID" value="${parent.idNumber || ''}" required>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="block text-gray-700 text-xs md:text-sm mb-1">Relationship</label>
+                                            <select class="w-full p-2 border rounded text-sm md:text-base parent-relationship" required>
+                                                <option value="">Select relationship</option>
+                                                <option value="mother" ${parent.relationship === 'mother' ? 'selected' : ''}>Mother</option>
+                                                <option value="father" ${parent.relationship === 'father' ? 'selected' : ''}>Father</option>
+                                                <option value="grandmother" ${parent.relationship === 'grandmother' ? 'selected' : ''}>Grandmother</option>
+                                                <option value="grandfather" ${parent.relationship === 'grandfather' ? 'selected' : ''}>Grandfather</option>
+                                            </select>
+                                        </div>
+                                    `;
+                                    
+                                    parentsFields.appendChild(parentDiv);
+                                    
+                                    // Add event listener to remove button
+                                    parentDiv.querySelector('.remove-parent').addEventListener('click', function() {
+                                        parentDiv.remove();
+                                    });
+                                }
+                            });
+                        }
+
+                        // Populate additional benefits if they exist
+                        if (funeralData.additionalBenefits && Array.isArray(funeralData.additionalBenefits)) {
+                            selectedBenefits = funeralData.additionalBenefits;
+                            
+                            // Update UI for selected benefits
+                            document.querySelectorAll('.benefit-item').forEach(item => {
+                                const benefit = item.getAttribute('data-benefit');
+                                const isSelected = selectedBenefits.some(b => b.benefit === benefit);
+                                
+                                if (isSelected) {
+                                    item.classList.add('selected');
+                                }
+                            });
+                            
+                            updateSelectedBenefitsList();
+                        }
+
+                    } else {
+                        console.log('No funeral documents found');
+                        coverStatus.textContent = 'Inactive';
+                        coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 mr-3';
+                        coverType.textContent = 'No active cover';
+                        coverPremium.textContent = 'R0';
+                        totalPremium.textContent = 'R0';
+                        coverDate.textContent = 'Not started';
+                        
+                        // Use profile data since no funeral data exists
+                        nameField.value = userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                        idField.value = userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                    }
+                    
+                    // Enable save button
+                    document.getElementById('save-family-text').textContent = 'Save Details';
+                    document.getElementById('save-family-btn').disabled = false;
+                })
+                .catch((error) => {
+                    console.error("Error loading funeral data: ", error);
+                    coverStatus.textContent = 'Error';
+                    coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-red-200 text-red-800 mr-3';
+                    coverType.textContent = 'Error loading cover';
+                    coverPremium.textContent = 'R0';
+                    totalPremium.textContent = 'R0';
+                    coverDate.textContent = 'Error';
+                    
+                    // Use profile data as fallback
+                    nameField.value = userProfileData.fullName || userProfileData.name || userProfileData.displayName || '';
+                    idField.value = userProfileData.idNumber || userProfileData.id || userProfileData.identityNumber || '';
+                    
+                    // Enable save button
+                    document.getElementById('save-family-text').textContent = 'Save Details';
+                    document.getElementById('save-family-btn').disabled = false;
+                });
+        }
+
+
+        // Function to format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-ZA', {
+                style: 'currency',
+                currency: 'ZAR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Family form submission
+        document.getElementById('family-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const user = auth.currentUser;
+            if (!user) {
+                alert('You need to be logged in to save family details.');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('save-family-text').innerHTML = '<div class="loading-spinner"></div>Saving...';
+            document.getElementById('save-family-btn').disabled = true;
+            
+            // Get main member details
+            const mainMember = {
+                fullName: document.getElementById('main-member-name').value,
+                idNumber: document.getElementById('main-member-id').value,
+                premium: 75 // Default premium for main member
+            };
+            
+            // Get spouse details if exists
+            let spouse = null;
+            if (document.getElementById('has-spouse').checked) {
+                spouse = {
+                    fullName: document.getElementById('spouse-name').value,
+                    idNumber: document.getElementById('spouse-id').value,
+                    premium: 0 // Spouse is included in main member premium
+                };
+            }
+            
+            // Get children details
+            const children = [];
+            const childElements = document.querySelectorAll('#children-fields > div');
+            childElements.forEach(childElement => {
+                const name = childElement.querySelector('.child-name').value;
+                const idNumber = childElement.querySelector('.child-id').value;
+                if (name && idNumber) {
+                    children.push({
+                        fullName: name,
+                        idNumber: idNumber,
+                        premium: 0 // Children are included in main member premium
+                    });
+                }
+            });
+            
+            // Get parents details
+            const extendedMembers = [];
+            const parentElements = document.querySelectorAll('#parents-fields > div');
+            parentElements.forEach(parentElement => {
+                const name = parentElement.querySelector('.parent-name').value;
+                const idNumber = parentElement.querySelector('.parent-id').value;
+                const relationship = parentElement.querySelector('.parent-relationship').value;
+                if (name && idNumber && relationship) {
+                    // Determine premium based on age (this would need actual age calculation)
+                    // For simplicity, we'll assume under 65 for now
+                    extendedMembers.push({
+                        fullName: name,
+                        idNumber: idNumber,
+                        relationship: relationship,
+                        premium: 55 // Default to under 65 premium
+                    });
+                }
+            });
+            
+            // Calculate total premium
+            let totalPremium = mainMember.premium;
+            extendedMembers.forEach(member => {
+                totalPremium += member.premium;
+            });
+            
+            // Add additional benefits to total
+            selectedBenefits.forEach(benefit => {
+                totalPremium += benefit.price;
+            });
+            
+            // Prepare funeral data
+            const funeralData = {
+                mainMember: mainMember,
+                spouse: spouse,
+                children: children,
+                extendedMembers: extendedMembers,
+                additionalBenefits: selectedBenefits,
+                totalMonthlyPremium: totalPremium,
+                status: 'active',
+                lastUpdated: new Date()
+            };
+            
+            // Check if funeral document already exists
+            db.collection("users").doc(user.uid).collection("funeral")
+                .limit(1)
+                .get()
+                .then((querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        // Update existing document
+                        const funeralDoc = querySnapshot.docs[0];
+                        return funeralDoc.ref.update(funeralData);
+                    } else {
+                        // Create new document
+                        funeralData.declaration = {
+                            submittedAt: new Date(),
+                            agreedToTerms: true
+                        };
+                        return db.collection("users").doc(user.uid).collection("funeral").add(funeralData);
+                    }
+                })
+                .then(() => {
+                    alert('Family details saved successfully!');
+                    document.getElementById('family-modal').classList.add('hidden');
+                    
+                    // Update UI with new data
+                    updateCoverDetails(funeralData);
+                })
+                .catch(error => {
+                    console.error("Error saving family details: ", error);
+                    alert('Error saving family details. Please try again.');
+                })
+                .finally(() => {
+                    // Reset save button
+                    document.getElementById('save-family-text').textContent = 'Save Details';
+                    document.getElementById('save-family-btn').disabled = false;
+                });
+        });
+    
+        
+        // Check for active funeral cover when user is logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Load user profile data immediately
+                loadUserProfileData(user.uid).then(() => {
+                    // Then check for funeral cover
+                    checkActiveFuneralCover(user.uid);
+                });
+            } else {
+                // User is not authenticated, redirect to login
+                console.log("User not authenticated, redirecting to login");
+                window.location.href = '../auth/login.html';
+            }
+        });
+    
+        function checkActiveFuneralCover(uid) {
+            // Show loading state
+            document.getElementById('cover-status').textContent = 'Loading...';
+            document.getElementById('cover-type').innerHTML = '<div class="loading-spinner"></div>Loading cover details';
+            
+            db.collection("users").doc(uid).collection("funeral")
+                .where("status", "==", "active")
+                .get()
+                .then((querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        // User has active cover
+                        querySnapshot.forEach((doc) => {
+                            const coverData = doc.data();
+                            updateUICoverActive(coverData);
+                        });
+                    } else {
+                        // No active cover found
+                        updateUICoverInactive();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error checking funeral cover: ", error);
+                    updateUICoverInactive();
+                });
+        }
+    
+        function updateUICoverActive(coverData) {
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverPremium = document.getElementById('cover-premium');
+            const coverDate = document.getElementById('cover-date');
+            const coverDetails = document.getElementById('cover-details');
+            const manageCoverBtn = document.getElementById('manage-cover-btn');
+            const totalPremium = document.getElementById('total-premium');
+            
+            // Update status
+            coverStatus.textContent = 'Active';
+            coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-green-200 text-green-800 mr-3';
+            
+            // Update type based on plan
+            let coverTypeText = 'Family Funeral Cover';
+            coverType.textContent = coverTypeText;
+            
+            // Update premium and date if available
+            if (coverData.mainMember && coverData.mainMember.premium) {
+                coverPremium.textContent = `R${coverData.mainMember.premium}`;
+            } else {
+                coverPremium.textContent = 'R75';
+            }
+            
+            if (coverData.totalMonthlyPremium) {
+                totalPremium.textContent = `R${coverData.totalMonthlyPremium}`;
+            } else {
+                totalPremium.textContent = 'R75';
+            }
+            
+            if (coverData.declaration && coverData.declaration.submittedAt) {
+                // Convert Firestore timestamp to date
+                const date = coverData.declaration.submittedAt.toDate();
+                coverDate.textContent = date.toLocaleDateString();
+            } else {
+                coverDate.textContent = 'Date not available';
+            }
+            
+            // Show details and update manage button
+            coverDetails.classList.remove('hidden');
+            manageCoverBtn.textContent = 'Manage Active Cover';
+            manageCoverBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            manageCoverBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        }
+    
+        function updateUICoverInactive() {
+            const coverStatus = document.getElementById('cover-status');
+            const coverType = document.getElementById('cover-type');
+            const coverDetails = document.getElementById('cover-details');
+            const manageCoverBtn = document.getElementById('manage-cover-btn');
+            
+            // Set to inactive state
+            coverStatus.textContent = 'Inactive';
+            coverStatus.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800 mr-3';
+            coverType.textContent = 'No active cover';
+            
+            // Hide details and reset manage button
+            coverDetails.classList.add('hidden');
+            manageCoverBtn.textContent = 'Get Cover Now';
+            manageCoverBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            manageCoverBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }
+
+        // WhatsApp and Email functions for proof sharing
+        function sendWhatsAppConfirmation() {
+            const amount = document.getElementById('contribution-amount').value;
+        
+            if (!amount) {
+                alert('Please enter the amount you deposited.');
+                return;
+            }
+        
+            const phoneNumber = "27692330914"; // Replace with your WhatsApp number
+            const message = `Hello, I have deposited R${amount} for my Funeral Cover. Here is my proof of payment.`;
+            const encodedMessage = encodeURIComponent(message);
+        
+            window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+        }
+
+        function sendEmailConfirmation() {
+            const amount = document.getElementById('contribution-amount').value;
+            
+            if (!amount) {
+                alert('Please enter the amount you deposited.');
+                return;
+            }
+            
+            const subject = 'Funeral Cover Deposit Proof';
+            const body = `Hello, I have deposited R${amount} for my Funeral Cover. Please find my proof of payment attached.`;
+            
+            window.open(`mailto:inquiries@vema24.co.za?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+        }
+
+        // Customer support functions
+        function contactSupportWhatsApp() {
+            const message = 'Hello, I need assistance with my Funeral Cover.';
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+
+        function contactSupportWhatsApp() {
+            const phoneNumber = "27692330914"; // Replace with your WhatsApp number
+            const message = 'Hello, I need assistance with my Funeral Cover.';
+            const encodedMessage = encodeURIComponent(message);
+        
+            window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+        }
+
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            auth.signOut().then(() => {
+                window.location.href = '../index.html';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>
